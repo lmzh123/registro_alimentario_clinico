@@ -14,10 +14,13 @@ service cloud.firestore {
     }
 
     // ─── /users/{uid} ───────────────────────────────────────────────────────
-    // Readable only by the owning user; writable only by Cloud Functions (admin SDK bypasses rules).
+    // Readable only by the owning user.
+    // Create allowed from the client so the registration flow can write the initial document.
+    // Update/delete remain locked to Cloud Functions (admin SDK bypasses rules).
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false; // Only Cloud Functions (admin SDK) may write user docs
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false;
     }
 
     // ─── /registros/{registroId} ─────────────────────────────────────────────
