@@ -11,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -81,7 +81,7 @@ fun RegistroDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = onCrisisResources) {
-                        Icon(Icons.Outlined.FavoriteBorder, stringResource(R.string.crisis_resources_button_cd))
+                        Icon(Icons.Filled.FavoriteBorder, stringResource(R.string.crisis_resources_button_cd))
                     }
                     IconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, stringResource(R.string.edit_button))

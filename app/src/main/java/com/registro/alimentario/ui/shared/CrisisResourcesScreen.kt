@@ -12,7 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -123,7 +123,7 @@ fun CrisisResourcesScreen(
                                 }
                             ) {
                                 Icon(
-                                    Icons.Outlined.Phone,
+                                    Icons.Filled.Phone,
                                     contentDescription = stringResource(R.string.crisis_call_cd, resource.name),
                                     modifier = Modifier.padding(end = 4.dp)
                                 )

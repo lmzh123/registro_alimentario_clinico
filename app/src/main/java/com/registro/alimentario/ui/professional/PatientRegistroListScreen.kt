@@ -12,7 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
@@ -71,7 +71,7 @@ fun PatientRegistroListScreen(
                 },
                 actions = {
                     IconButton(onClick = { showFilterSheet = true }) {
-                        Icon(Icons.Default.FilterList, stringResource(R.string.filter_button))
+                        Icon(Icons.Default.MoreVert, stringResource(R.string.filter_button))
                     }
                 }
             )

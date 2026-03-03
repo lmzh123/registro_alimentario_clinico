@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme. Compose handles all theming; this just removes the action bar. -->
+    <style name="Theme.RegistroAlimentario" parent="Theme.AppCompat.DayNight.NoActionBar" />
+</resources>

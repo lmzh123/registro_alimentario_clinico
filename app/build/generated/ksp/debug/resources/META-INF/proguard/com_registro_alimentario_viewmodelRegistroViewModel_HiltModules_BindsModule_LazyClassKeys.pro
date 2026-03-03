@@ -1,0 +1,3 @@
+-keep,allowobfuscation,allowshrinking class com.registro.alimentario.viewmodel.AuthViewModel
+-keep,allowobfuscation,allowshrinking class com.registro.alimentario.viewmodel.AuthViewModel
+-keep,allowobfuscation,allowshrinking class com.registro.alimentario.viewmodel.RegistroViewModel
