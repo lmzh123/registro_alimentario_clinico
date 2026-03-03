@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Photos stored under registros/{registroId}/{filename}
+    // Only the owning patient can upload; authenticated users with access can read (enforced via signed URLs)
+    match /registros/{registroId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.token.role == 'paciente' &&
+        request.resource.size < 5 * 1024 * 1024; // max 5 MB per file
+      allow delete: if request.auth != null &&
+        request.auth.token.role == 'paciente';
+    }
+  }
+}

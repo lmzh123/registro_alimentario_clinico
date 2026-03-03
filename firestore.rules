@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the caller has a specific role via custom claim
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+
+    function isProfessional() {
+      return request.auth != null &&
+        request.auth.token.role in ['nutricionista', 'psicologia', 'psiquiatria'];
+    }
+
+    // ─── /users/{uid} ───────────────────────────────────────────────────────
+    // Readable only by the owning user; writable only by Cloud Functions (admin SDK bypasses rules).
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // Only Cloud Functions (admin SDK) may write user docs
+    }
+
+    // ─── /registros/{registroId} ─────────────────────────────────────────────
+    match /registros/{registroId} {
+
+      // Paciente: full read/write on their own registros
+      allow read, write: if request.auth != null &&
+        hasRole('paciente') &&
+        (resource == null || resource.data.usuario_id == request.auth.uid) &&
+        (request.resource == null || request.resource.data.usuario_id == request.auth.uid);
+
+      // Professionals: read only if their role is in the visibilidad array
+      allow read: if isProfessional() &&
+        request.auth.token.role in resource.data.visibilidad;
+
+      // Professionals: explicitly blocked from writing registros
+      allow write: if false && isProfessional();
+
+      // ─── /registros/{registroId}/comentarios/{comentarioId} ──────────────
+      match /comentarios/{comentarioId} {
+
+        // Patient reads all comments on their own registros
+        allow read: if request.auth != null &&
+          hasRole('paciente') &&
+          get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id == request.auth.uid;
+
+        // Professionals read comments on registros they can access
+        allow read: if isProfessional() &&
+          request.auth.token.role in get(/databases/$(database)/documents/registros/$(registroId)).data.visibilidad;
+
+        // Professionals can only create new comments (no update or delete)
+        allow create: if isProfessional() &&
+          request.auth.token.role in get(/databases/$(database)/documents/registros/$(registroId)).data.visibilidad &&
+          request.resource.data.profesional_id == request.auth.uid &&
+          request.resource.data.rol == request.auth.token.role;
+
+        allow update, delete: if false;
+      }
+    }
+
+    // ─── /crisis_resources/{docId} ───────────────────────────────────────────
+    // All authenticated users can read crisis resources; only admin writes.
+    match /crisis_resources/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // managed via Firebase console or admin SDK
+    }
+  }
+}

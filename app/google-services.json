@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "22728444863",
+    "project_id": "registroalimentarioclinico",
+    "storage_bucket": "registroalimentarioclinico.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:22728444863:android:026ac297a0bcbb0567af0a",
+        "android_client_info": {
+          "package_name": "com.registro.alimentario"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbUD_MBGnwv_3ESNy9eXe_SFFL7HTMZBM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
