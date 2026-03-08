@@ -3,6 +3,7 @@ package com.registro.alimentario.ui.shared
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,10 +25,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
@@ -36,25 +38,40 @@ data class CrisisResource(
     val name: String,
     val description: String,
     val phone: String? = null,
-    val url: String? = null
+    val whatsapp: String? = null,
+    val url: String? = null,
+    val sectionTitle: String? = null
 )
 
 // Hardcoded defaults — to be replaced with Firestore config once populated with clinical team
 private val defaultResources = listOf(
     CrisisResource(
-        name = "Centro de Asistencia al Suicida",
-        description = "Línea de crisis disponible las 24 horas",
-        phone = "135"
+        sectionTitle = "Líneas nacionales (funcionan en todo el país)",
+        name = "Línea Nacional de Salud Mental",
+        description = "192 – opción 4 · 24 horas / todos los días\nOrientación psicológica y apoyo en crisis a nivel nacional.",
+        phone = "192"
     ),
     CrisisResource(
-        name = "SAME - Sistema de Atención Médica de Emergencias",
-        description = "Emergencias médicas en Buenos Aires",
-        phone = "107"
+        name = "Emergencias",
+        description = "24/7 · Puedes pedir apoyo en salud mental y te conectan con equipos de atención o ambulancias si es necesario.",
+        phone = "123"
     ),
     CrisisResource(
-        name = "Línea de Salud Mental",
-        description = "Atención en salud mental del Ministerio de Salud",
-        phone = "0800-999-0091"
+        sectionTitle = "Líneas importantes por ciudades",
+        name = "Línea Amiga Saludable — Medellín",
+        description = "24/7 · Atención psicológica y activación de urgencias en salud mental. Medellín y área metropolitana.",
+        phone = "6044444448"
+    ),
+    CrisisResource(
+        name = "Línea Alma — Medellín (UdeA)",
+        description = "24/7 · Atención en salud mental y orientación para la comunidad universitaria de la Universidad de Antioquia.",
+        phone = "018000423874"
+    ),
+    CrisisResource(
+        name = "Línea 106 \"El poder de ser escuchado\" — Bogotá",
+        description = "24/7",
+        phone = "106",
+        whatsapp = "573007548933"
     )
 )
 
@@ -96,6 +113,15 @@ fun CrisisResourcesScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
             items(defaultResources) { resource ->
+                resource.sectionTitle?.let { title ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,19 +141,35 @@ fun CrisisResourcesScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        resource.phone?.let { phone ->
-                            TextButton(
-                                onClick = {
-                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
-                                    context.startActivity(intent)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            resource.phone?.let { phone ->
+                                TextButton(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                        context.startActivity(intent)
+                                    }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.Phone,
+                                        contentDescription = stringResource(R.string.crisis_call_cd, resource.name),
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                    Text(phone)
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Filled.Phone,
-                                    contentDescription = stringResource(R.string.crisis_call_cd, resource.name),
-                                    modifier = Modifier.padding(end = 4.dp)
-                                )
-                                Text(phone)
+                            }
+                            resource.whatsapp?.let { wa ->
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$wa"))
+                                        context.startActivity(intent)
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_whatsapp),
+                                        contentDescription = stringResource(R.string.crisis_whatsapp_button),
+                                        tint = Color.Unspecified
+                                    )
+                                }
                             }
                         }
                     }

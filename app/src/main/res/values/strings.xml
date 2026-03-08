@@ -120,6 +120,7 @@
     <string name="crisis_resources_title">Apoyo disponible</string>
     <string name="crisis_resources_subtitle">Si estás pasando un momento difícil, estas personas pueden ayudarte.</string>
     <string name="crisis_call_cd">Llamar a %s</string>
+    <string name="crisis_whatsapp_button">WhatsApp</string>
 
     <!-- Notifications -->
     <string name="notification_settings_title">Recordatorios</string>
