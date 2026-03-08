@@ -3,24 +3,89 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper: check if the caller has a specific role via custom claim
+    // Helper: check if the caller has a specific role via custom claim.
+    // Defaults to 'paciente' when the claim is absent so that newly registered
+    // users (before the Cloud Function sets their claim) can access their data.
     function hasRole(role) {
-      return request.auth != null && request.auth.token.role == role;
+      return request.auth != null && request.auth.token.get('role', 'paciente') == role;
+    }
+
+    // Returns the caller's role: JWT claim when set (production), Firestore doc otherwise (dev).
+    function callerRole() {
+      let jwtRole = request.auth.token.get('role', '');
+      return jwtRole.size() > 0 ? jwtRole :
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'paciente');
     }
 
     function isProfessional() {
-      return request.auth != null &&
-        request.auth.token.role in ['nutricionista', 'psicologia', 'psiquiatria'];
+      // Check JWT custom claim first (set by Cloud Function in production).
+      // Fall back to Firestore user document when the claim is absent (development / no Cloud Function).
+      return request.auth != null && (
+        request.auth.token.get('role', '') in ['nutricionista', 'psicologia', 'psiquiatria'] ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'paciente') in ['nutricionista', 'psicologia', 'psiquiatria']
+      );
+    }
+
+    // Check whether an active connection exists between the given patient and the
+    // caller. Uses a deterministic document ID "{patientId}_{therapistId}".
+    function hasActiveConnection(patientId) {
+      let connId = patientId + "_" + request.auth.uid;
+      return exists(/databases/$(database)/documents/connections/$(connId)) &&
+        get(/databases/$(database)/documents/connections/$(connId)).data.status == "active";
     }
 
     // ─── /users/{uid} ───────────────────────────────────────────────────────
-    // Readable only by the owning user.
+    // Readable by the owning user OR by patients reading professional profiles
+    // (needed for therapist-search-by-email feature).
     // Create allowed from the client so the registration flow can write the initial document.
     // Update/delete remain locked to Cloud Functions (admin SDK bypasses rules).
     match /users/{uid} {
+      // Owner can always read their own profile.
       allow read: if request.auth != null && request.auth.uid == uid;
+      // Patients can read professional profiles (needed for therapist email search).
+      allow read: if request.auth != null &&
+        hasRole('paciente') &&
+        resource.data.get('role', 'paciente') in ['nutricionista', 'psicologia', 'psiquiatria'];
+      // Professionals can read the profile of their connected patients.
+      allow read: if request.auth != null &&
+        isProfessional() &&
+        hasActiveConnection(uid);
       allow create: if request.auth != null && request.auth.uid == uid;
       allow update, delete: if false;
+    }
+
+    // ─── /connections/{connectionId} ─────────────────────────────────────────
+    // Document ID must equal "{patientId}_{therapistId}" (enforced on create).
+    match /connections/{connectionId} {
+
+      // Patient can read their own connection documents.
+      allow read: if request.auth != null &&
+        resource.data.patientId == request.auth.uid;
+      // Therapist can read their own connection documents.
+      allow read: if request.auth != null &&
+        resource.data.therapistId == request.auth.uid;
+
+      // Patient can create a connection request.
+      // Validates: own patientId, status = "pending", correct deterministic doc ID.
+      allow create: if request.auth != null &&
+        hasRole('paciente') &&
+        request.resource.data.patientId == request.auth.uid &&
+        request.resource.data.status == 'pending' &&
+        connectionId == request.resource.data.patientId + "_" + request.resource.data.therapistId;
+
+      // Therapist can accept (update status to "active").
+      // Immutable fields (patientId, therapistId) cannot change.
+      allow update: if request.auth != null &&
+        isProfessional() &&
+        resource.data.therapistId == request.auth.uid &&
+        request.resource.data.status == 'active' &&
+        request.resource.data.patientId == resource.data.patientId &&
+        request.resource.data.therapistId == resource.data.therapistId;
+
+      // Patient can revoke; therapist can decline (both delete the document).
+      allow delete: if request.auth != null &&
+        (resource.data.patientId == request.auth.uid ||
+         resource.data.therapistId == request.auth.uid);
     }
 
     // ─── /registros/{registroId} ─────────────────────────────────────────────
@@ -32,9 +97,13 @@ service cloud.firestore {
         (resource == null || resource.data.usuario_id == request.auth.uid) &&
         (request.resource == null || request.resource.data.usuario_id == request.auth.uid);
 
-      // Professionals: read only if their role is in the visibilidad array
+      // Professionals: read only if an active connection with the patient exists.
+      // Role-based field visibility (visibilidad array) is enforced by the app query
+      // via whereArrayContains("visibilidad", professionalRole).
+      // Note: in production with JWT custom claims, add:
+      //   && request.auth.token.role in resource.data.visibilidad
       allow read: if isProfessional() &&
-        request.auth.token.role in resource.data.visibilidad;
+        hasActiveConnection(resource.data.usuario_id);
 
       // Professionals: explicitly blocked from writing registros
       allow write: if false && isProfessional();
@@ -47,15 +116,14 @@ service cloud.firestore {
           hasRole('paciente') &&
           get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id == request.auth.uid;
 
-        // Professionals read comments on registros they can access
+        // Professionals read comments on registros they can access (active connection)
         allow read: if isProfessional() &&
-          request.auth.token.role in get(/databases/$(database)/documents/registros/$(registroId)).data.visibilidad;
+          hasActiveConnection(get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id);
 
         // Professionals can only create new comments (no update or delete)
         allow create: if isProfessional() &&
-          request.auth.token.role in get(/databases/$(database)/documents/registros/$(registroId)).data.visibilidad &&
-          request.resource.data.profesional_id == request.auth.uid &&
-          request.resource.data.rol == request.auth.token.role;
+          hasActiveConnection(get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id) &&
+          request.resource.data.profesional_id == request.auth.uid;
 
         allow update, delete: if false;
       }

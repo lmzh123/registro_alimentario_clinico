@@ -9,5 +9,6 @@ interface ProfessionalRepository {
         patientId: String,
         professionalRole: String
     ): Flow<List<Registro>>
-    suspend fun getPatientsForProfessional(professionalRole: String): Result<List<User>>
+    /** Returns patients who have an active connection with the given therapist UID. */
+    suspend fun getPatientsForProfessional(therapistId: String): Result<List<User>>
 }

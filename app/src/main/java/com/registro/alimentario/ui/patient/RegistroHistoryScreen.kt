@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -40,13 +41,20 @@ fun RegistroHistoryScreen(
     registros: List<Registro>,
     onCreateNew: () -> Unit,
     onRegistroTapped: (String) -> Unit,
-    onCrisisResources: () -> Unit
+    onCrisisResources: () -> Unit,
+    onManageTherapists: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.patient_home_title)) },
                 actions = {
+                    IconButton(onClick = onManageTherapists) {
+                        Icon(
+                            Icons.Filled.Person,
+                            contentDescription = stringResource(R.string.manage_therapists_cd)
+                        )
+                    }
                     IconButton(onClick = onCrisisResources) {
                         Icon(
                             Icons.Filled.FavoriteBorder,

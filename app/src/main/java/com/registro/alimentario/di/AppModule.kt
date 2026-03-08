@@ -7,6 +7,8 @@ import com.registro.alimentario.repository.AuthRepository
 import com.registro.alimentario.repository.AuthRepositoryImpl
 import com.registro.alimentario.repository.ComentarioRepository
 import com.registro.alimentario.repository.ComentarioRepositoryImpl
+import com.registro.alimentario.repository.ConnectionRepository
+import com.registro.alimentario.repository.ConnectionRepositoryImpl
 import com.registro.alimentario.repository.PhotoRepository
 import com.registro.alimentario.repository.PhotoRepositoryImpl
 import com.registro.alimentario.repository.ProfessionalRepository
@@ -44,4 +46,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindPhotoRepository(impl: PhotoRepositoryImpl): PhotoRepository
     @Binds @Singleton abstract fun bindProfessionalRepository(impl: ProfessionalRepositoryImpl): ProfessionalRepository
     @Binds @Singleton abstract fun bindComentarioRepository(impl: ComentarioRepositoryImpl): ComentarioRepository
+    @Binds @Singleton abstract fun bindConnectionRepository(impl: ConnectionRepositoryImpl): ConnectionRepository
 }

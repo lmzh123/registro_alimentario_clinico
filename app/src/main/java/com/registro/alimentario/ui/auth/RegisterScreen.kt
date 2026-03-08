@@ -15,15 +15,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import com.registro.alimentario.model.UserRole
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,13 +49,15 @@ import com.registro.alimentario.viewmodel.AuthUiState
 @Composable
 fun RegisterScreen(
     uiState: AuthUiState,
-    onRegister: (email: String, password: String, displayName: String) -> Unit,
+    onRegister: (email: String, password: String, displayName: String, role: UserRole) -> Unit,
     onNavigateBack: () -> Unit,
     onRegisterSuccess: () -> Unit
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var selectedRole by rememberSaveable { mutableStateOf(UserRole.PACIENTE) }
+    var roleDropdownExpanded by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) onRegisterSuccess()
@@ -92,7 +99,7 @@ fun RegisterScreen(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { email = it.lowercase() },
                 label = { Text(stringResource(R.string.login_email_label)) },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -116,6 +123,38 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = roleDropdownExpanded,
+                onExpandedChange = { roleDropdownExpanded = it },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = selectedRole.displayName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Tipo de cuenta") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleDropdownExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                )
+                ExposedDropdownMenu(
+                    expanded = roleDropdownExpanded,
+                    onDismissRequest = { roleDropdownExpanded = false }
+                ) {
+                    UserRole.entries.forEach { role ->
+                        DropdownMenuItem(
+                            text = { Text(role.displayName) },
+                            onClick = {
+                                selectedRole = role
+                                roleDropdownExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             if (uiState is AuthUiState.Error) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -129,7 +168,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onRegister(email, password, name) },
+                onClick = { onRegister(email, password, name, selectedRole) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = uiState !is AuthUiState.Loading
             ) {

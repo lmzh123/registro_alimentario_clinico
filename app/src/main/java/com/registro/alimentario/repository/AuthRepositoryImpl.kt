@@ -29,21 +29,20 @@ class AuthRepositoryImpl @Inject constructor(
         awaitClose { auth.removeAuthStateListener(listener) }
     }
 
-    override suspend fun register(email: String, password: String, displayName: String): Result<User> {
+    override suspend fun register(email: String, password: String, displayName: String, role: UserRole): Result<User> {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val fbUser = result.user ?: return Result.failure(Exception("Error al crear la cuenta"))
 
-            // Create user document in Firestore (Cloud Function will set the custom claim)
             val user = User(
                 uid = fbUser.uid,
                 displayName = displayName,
-                email = email,
-                role = UserRole.PACIENTE
+                email = fbUser.email ?: email.trim().lowercase(),
+                role = role
             )
             firestore.collection("users").document(fbUser.uid).set(user.toFirestoreMap()).await()
 
-            // Force token refresh to pick up the custom claim set by Cloud Function
+            // Force token refresh to pick up any custom claim set by Cloud Function
             fbUser.getIdToken(true).await()
 
             Result.success(user)
@@ -79,8 +78,14 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getCurrentUserRole(): UserRole? {
         val fbUser = auth.currentUser ?: return null
         return try {
+            // Prefer the JWT custom claim (set by Cloud Function in production)
             val tokenResult = fbUser.getIdToken(false).await()
-            val roleString = tokenResult.claims["role"] as? String
+            val claimRole = (tokenResult.claims["role"] as? String)?.let { UserRole.fromId(it) }
+            if (claimRole != null) return claimRole
+
+            // Fallback: read role from the Firestore user document
+            val doc = firestore.collection("users").document(fbUser.uid).get().await()
+            val roleString = doc.getString("role")
             roleString?.let { UserRole.fromId(it) }
         } catch (e: Exception) {
             null

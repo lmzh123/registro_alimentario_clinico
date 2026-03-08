@@ -13,6 +13,9 @@ object NavRoutes {
     const val REGISTRO_DETAIL = "registro_detail/{registroId}"
     const val NOTIFICATION_SETTINGS = "notification_settings"
 
+    // Patient — connection management
+    const val MANAGE_THERAPISTS = "manage_therapists"
+
     // Professional
     const val PROFESSIONAL_HOME = "professional_home"
     const val PATIENT_REGISTRO_LIST = "patient_registro_list/{patientId}/{patientName}"

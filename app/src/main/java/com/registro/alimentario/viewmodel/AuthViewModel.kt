@@ -61,7 +61,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(email: String, password: String, displayName: String) {
+    fun register(email: String, password: String, displayName: String, role: UserRole = UserRole.PACIENTE) {
         if (email.isBlank() || password.isBlank() || displayName.isBlank()) {
             _uiState.value = AuthUiState.Error("Por favor completá todos los campos")
             return
@@ -72,9 +72,9 @@ class AuthViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            authRepository.register(email.trim(), password, displayName.trim()).fold(
+            authRepository.register(email.trim(), password, displayName.trim(), role).fold(
                 onSuccess = { user ->
-                    _currentRole.value = UserRole.PACIENTE
+                    _currentRole.value = role
                     _uiState.value = AuthUiState.Success(user)
                 },
                 onFailure = {

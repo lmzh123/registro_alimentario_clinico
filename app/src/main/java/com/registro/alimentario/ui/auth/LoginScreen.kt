@@ -62,7 +62,7 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { email = it.lowercase() },
             label = { Text(stringResource(R.string.login_email_label)) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,

@@ -129,6 +129,37 @@
     <string name="permission_grant_button">Dar permiso</string>
     <string name="permission_deny_button">Ahora no</string>
 
+    <!-- Connection management — patient side -->
+    <string name="manage_therapists_title">Mis profesionales</string>
+    <string name="manage_therapists_cd">Gestionar mis profesionales</string>
+    <string name="connections_section_active">Profesionales con acceso</string>
+    <string name="connections_section_pending">Solicitudes enviadas</string>
+    <string name="connections_empty">Aún no tenés profesionales conectados.\nBuscá a tu profesional por correo electrónico para invitarle.</string>
+    <string name="connection_status_active">Activo</string>
+    <string name="connection_status_pending">Pendiente de aceptación</string>
+    <string name="search_therapist_title">Invitar profesional</string>
+    <string name="search_therapist_email_label">Correo electrónico del profesional</string>
+    <string name="search_therapist_email_hint">nombre@clinica.com</string>
+    <string name="search_therapist_button">Buscar</string>
+    <string name="therapist_not_found">No se encontró ningún profesional con ese correo.</string>
+    <string name="send_connection_request">Enviar solicitud de acceso</string>
+    <string name="already_connected">Ya tenés una conexión con este profesional.</string>
+    <string name="request_sent_confirmation">Solicitud enviada. El profesional recibirá una notificación.</string>
+    <string name="revoke_connection_title">¿Revocar acceso?</string>
+    <string name="revoke_connection_message">%s ya no podrá ver tus registros. Podés invitarle de nuevo cuando quieras.</string>
+    <string name="cancel_request_title">¿Cancelar solicitud?</string>
+    <string name="cancel_request_message">Se cancelará la solicitud enviada a %s.</string>
+    <string name="revoke_button">Revocar acceso</string>
+    <string name="cancel_request_button">Cancelar solicitud</string>
+
+    <!-- Connection management — therapist side -->
+    <string name="pending_requests_section">Solicitudes pendientes</string>
+    <string name="accept_request_button">Aceptar</string>
+    <string name="decline_request_button">Rechazar</string>
+    <string name="decline_request_title">¿Rechazar solicitud?</string>
+    <string name="decline_request_message">Se rechazará la solicitud de %s.</string>
+    <string name="no_patients_connected">Aún no tenés pacientes conectados.\nLos pacientes deben enviarte una solicitud de acceso.</string>
+
     <!-- General -->
     <string name="loading">Cargando…</string>
     <string name="back_cd">Volver</string>

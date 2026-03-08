@@ -46,10 +46,13 @@ fun AppNavHost(
         composable(NavRoutes.REGISTER) {
             RegisterScreen(
                 uiState = uiState,
-                onRegister = { email, password, name -> authViewModel.register(email, password, name) },
+                onRegister = { email, password, name, role -> authViewModel.register(email, password, name, role) },
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    navController.navigate(NavRoutes.REGISTRO_HISTORY) {
+                    val role = currentRole ?: UserRole.PACIENTE
+                    val destination = if (role == UserRole.PACIENTE) NavRoutes.REGISTRO_HISTORY
+                    else NavRoutes.PROFESSIONAL_HOME
+                    navController.navigate(destination) {
                         popUpTo(NavRoutes.LOGIN) { inclusive = true }
                     }
                     authViewModel.resetState()

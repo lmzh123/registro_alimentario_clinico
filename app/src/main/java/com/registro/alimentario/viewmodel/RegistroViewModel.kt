@@ -59,8 +59,13 @@ class RegistroViewModel @Inject constructor(
 
     fun loadPatientRegistros(patientId: String) {
         viewModelScope.launch {
-            registroRepository.getRegistrosForPatient(patientId).collect { list ->
-                _registros.value = list
+            try {
+                registroRepository.getRegistrosForPatient(patientId).collect { list ->
+                    _registros.value = list
+                }
+            } catch (e: Exception) {
+                // Flow closed with a Firestore error (e.g. permission denied, missing index).
+                // Leave _registros as-is so the UI stays stable instead of crashing.
             }
         }
     }

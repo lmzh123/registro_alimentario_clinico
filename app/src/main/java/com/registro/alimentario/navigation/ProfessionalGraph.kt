@@ -2,6 +2,7 @@ package com.registro.alimentario.navigation
 
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -15,6 +16,7 @@ import com.registro.alimentario.ui.professional.ProfessionalHomeScreen
 import com.registro.alimentario.ui.professional.RegistroDetailProfessionalScreen
 import com.registro.alimentario.ui.shared.PhotoViewerScreen
 import com.registro.alimentario.viewmodel.AuthViewModel
+import com.registro.alimentario.viewmodel.ConnectionViewModel
 import com.registro.alimentario.viewmodel.ProfessionalViewModel
 
 fun NavGraphBuilder.professionalGraph(
@@ -23,8 +25,10 @@ fun NavGraphBuilder.professionalGraph(
 ) {
     composable(NavRoutes.PROFESSIONAL_HOME) {
         val professionalViewModel: ProfessionalViewModel = hiltViewModel()
+        val connectionViewModel: ConnectionViewModel = hiltViewModel()
         val currentRole by authViewModel.currentRole.collectAsState()
-        val patients by professionalViewModel.patients.collectAsState()
+        val patients by connectionViewModel.therapistActivePatients.collectAsState()
+        val pendingConnections by connectionViewModel.therapistPendingRequests.collectAsState()
 
         // Guard: patients who end up here go to patient graph
         if (currentRole == UserRole.PACIENTE) {
@@ -34,18 +38,22 @@ fun NavGraphBuilder.professionalGraph(
             return@composable
         }
 
-        androidx.compose.runtime.LaunchedEffect(currentRole) {
-            currentRole?.let { professionalViewModel.loadPatients(it) }
+        val therapistId = FirebaseAuth.getInstance().currentUser?.uid
+        androidx.compose.runtime.LaunchedEffect(therapistId) {
+            therapistId?.let { connectionViewModel.loadTherapistConnections(it) }
         }
 
         ProfessionalHomeScreen(
             role = currentRole ?: UserRole.NUTRICIONISTA,
             patients = patients,
+            pendingConnections = pendingConnections,
             onPatientSelected = { patient ->
                 navController.navigate(
                     NavRoutes.patientRegistroList(patient.uid, patient.displayName.ifBlank { patient.email })
                 )
             },
+            onAcceptRequest = { connectionId -> connectionViewModel.acceptRequest(connectionId) },
+            onDeclineRequest = { connectionId -> connectionViewModel.declineRequest(connectionId) },
             onLogout = {
                 authViewModel.logout()
                 navController.navigate(NavRoutes.LOGIN) {
@@ -90,7 +98,11 @@ fun NavGraphBuilder.professionalGraph(
         arguments = listOf(navArgument("registroId") { type = NavType.StringType })
     ) { backStack ->
         val registroId = backStack.arguments?.getString("registroId") ?: return@composable
-        val professionalViewModel: ProfessionalViewModel = hiltViewModel()
+        // Reuse the same ViewModel instance from the list screen so filteredRegistros is populated
+        val listEntry = remember(navController) {
+            navController.getBackStackEntry(NavRoutes.PATIENT_REGISTRO_LIST)
+        }
+        val professionalViewModel: ProfessionalViewModel = hiltViewModel(listEntry)
         val currentRole by authViewModel.currentRole.collectAsState()
         val registros by professionalViewModel.filteredRegistros.collectAsState()
         val registro = registros.firstOrNull { it.id == registroId } ?: return@composable

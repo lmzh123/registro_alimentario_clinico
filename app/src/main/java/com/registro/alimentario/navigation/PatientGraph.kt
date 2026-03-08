@@ -12,12 +12,14 @@ import androidx.navigation.navDeepLink
 import com.google.firebase.auth.FirebaseAuth
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.ui.patient.CreateRegistroScreen
+import com.registro.alimentario.ui.patient.ManageTherapistsScreen
 import com.registro.alimentario.ui.patient.NotificationSettingsScreen
 import com.registro.alimentario.ui.patient.RegistroDetailScreen
 import com.registro.alimentario.ui.patient.RegistroHistoryScreen
 import com.registro.alimentario.ui.shared.CrisisResourcesScreen
 import com.registro.alimentario.ui.shared.PhotoViewerScreen
 import com.registro.alimentario.viewmodel.AuthViewModel
+import com.registro.alimentario.viewmodel.ConnectionViewModel
 import com.registro.alimentario.viewmodel.RegistroViewModel
 import com.registro.alimentario.repository.ComentarioRepository
 import dagger.hilt.android.EntryPointAccessors
@@ -49,7 +51,8 @@ fun NavGraphBuilder.patientGraph(
             registros = registros,
             onCreateNew = { navController.navigate(NavRoutes.CREATE_REGISTRO) },
             onRegistroTapped = { id -> navController.navigate(NavRoutes.registroDetail(id)) },
-            onCrisisResources = { navController.navigate(NavRoutes.CRISIS_RESOURCES) }
+            onCrisisResources = { navController.navigate(NavRoutes.CRISIS_RESOURCES) },
+            onManageTherapists = { navController.navigate(NavRoutes.MANAGE_THERAPISTS) }
         )
     }
 
@@ -136,6 +139,45 @@ fun NavGraphBuilder.patientGraph(
 
     composable(NavRoutes.NOTIFICATION_SETTINGS) {
         NotificationSettingsScreen(onNavigateBack = { navController.popBackStack() })
+    }
+
+    composable(NavRoutes.MANAGE_THERAPISTS) {
+        val connectionViewModel: ConnectionViewModel = hiltViewModel()
+        val fbUser = FirebaseAuth.getInstance().currentUser ?: return@composable
+        val patientId = fbUser.uid
+        val patientName = fbUser.displayName?.ifBlank { fbUser.email ?: "" } ?: fbUser.email ?: ""
+
+        androidx.compose.runtime.LaunchedEffect(patientId) {
+            connectionViewModel.loadPatientConnections(patientId)
+        }
+
+        val connections by connectionViewModel.patientConnections.collectAsState()
+        val searchQuery by connectionViewModel.searchQuery.collectAsState()
+        val searchState by connectionViewModel.searchState.collectAsState()
+        val searchResult by connectionViewModel.searchResult.collectAsState()
+        val requestSent by connectionViewModel.requestSent.collectAsState()
+
+        ManageTherapistsScreen(
+            connections = connections,
+            searchQuery = searchQuery,
+            searchState = searchState,
+            searchResult = searchResult,
+            requestSent = requestSent,
+            onSearchQueryChange = { connectionViewModel.onSearchQueryChange(it) },
+            onSearch = { connectionViewModel.searchTherapist() },
+            onSendRequest = { therapistId, therapistName, therapistRole ->
+                connectionViewModel.sendRequest(
+                    patientId = patientId,
+                    patientName = patientName,
+                    therapistId = therapistId,
+                    therapistName = therapistName,
+                    therapistRole = therapistRole
+                )
+            },
+            onRevokeConnection = { connectionViewModel.revokeConnection(it) },
+            onResetRequestSent = { connectionViewModel.resetRequestSent() },
+            onNavigateBack = { navController.popBackStack() }
+        )
     }
 
     composable(

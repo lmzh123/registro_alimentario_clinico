@@ -3,6 +3,7 @@ package com.registro.alimentario.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.registro.alimentario.model.Registro
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
@@ -46,9 +47,10 @@ class ProfessionalViewModel @Inject constructor(
     private val _commentSent = MutableStateFlow(false)
     val commentSent: StateFlow<Boolean> = _commentSent.asStateFlow()
 
-    fun loadPatients(role: UserRole) {
+    fun loadPatients() {
+        val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
-            professionalRepository.getPatientsForProfessional(role.id).fold(
+            professionalRepository.getPatientsForProfessional(therapistId).fold(
                 onSuccess = { _patients.value = it },
                 onFailure = { /* surface error via snackbar in UI */ }
             )
@@ -71,7 +73,7 @@ class ProfessionalViewModel @Inject constructor(
 
     private fun applyFilter() {
         val f = _filter.value
-        _filteredRegistros.value = _allRegistros.value.filter { r ->
+        _filteredRegistros.value = _allRegistros.value.sortedByDescending { it.fechaHora.toDate() }.filter { r ->
             (if (f.fueAtracon) r.fueAtracon.id == "si" else true) &&
             (if (f.deseosPurgar) r.deseosPurgar else true) &&
             (if (f.actuoSobrePurga) r.actuoSobrePurga else true) &&
