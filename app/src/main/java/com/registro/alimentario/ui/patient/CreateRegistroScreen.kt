@@ -55,7 +55,6 @@ import com.registro.alimentario.model.FueAtracon
 import com.registro.alimentario.model.TipoComida
 import com.registro.alimentario.ui.shared.components.EmotionPicker
 import com.registro.alimentario.ui.shared.components.PhotoRow
-import com.registro.alimentario.ui.shared.components.VisibilitySelector
 import com.registro.alimentario.viewmodel.RegistroFormState
 import java.io.File
 
@@ -279,19 +278,7 @@ fun CreateRegistroScreen(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 5
             )
-            SwitchRow(
-                label = stringResource(R.string.notes_private_label),
-                checked = formState.notasEsPrivada,
-                onCheckedChange = { onFieldUpdate { copy(notasEsPrivada = it) } }
-            )
             Spacer(modifier = Modifier.height(16.dp))
-
-            // ── Visibility ──
-            VisibilitySelector(
-                selected = formState.visibilidad,
-                onSelectionChanged = { onFieldUpdate { copy(visibilidad = it) } }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
 
             // ── Error message ──
             if (formState.errorMessage != null) {

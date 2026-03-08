@@ -8,6 +8,7 @@ import com.registro.alimentario.model.EmocionEntry
 import com.registro.alimentario.model.FueAtracon
 import com.registro.alimentario.model.Registro
 import com.registro.alimentario.model.TipoComida
+import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.repository.PhotoRepository
 import com.registro.alimentario.repository.RegistroRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,8 +35,6 @@ data class RegistroFormState(
     val pensamientos: String = "",
     val comentariosExternos: String = "",
     val notasAdicionales: String = "",
-    val notasEsPrivada: Boolean = true,
-    val visibilidad: List<String> = emptyList(),
     val fotosUris: List<Uri> = emptyList(),          // pending local URIs (not yet uploaded)
     val fotosUrls: List<String> = emptyList(),        // already uploaded URLs
     val isLoading: Boolean = false,
@@ -87,8 +86,6 @@ class RegistroViewModel @Inject constructor(
             pensamientos = registro.pensamientos,
             comentariosExternos = registro.comentariosExternos,
             notasAdicionales = registro.notasAdicionales,
-            notasEsPrivada = registro.notasVisibilidad.isEmpty(),
-            visibilidad = registro.visibilidad,
             fotosUrls = registro.fotos
         )
     }
@@ -144,7 +141,11 @@ class RegistroViewModel @Inject constructor(
             }
 
             val allUrls = state.fotosUrls + newUrls
-            val notasVisibilidad = if (state.notasEsPrivada) emptyList() else state.visibilidad
+            val allRoles = listOf(
+                UserRole.NUTRICIONISTA.id,
+                UserRole.PSICOLOGIA.id,
+                UserRole.PSIQUIATRIA.id
+            )
 
             val registro = Registro(
                 id = registroId,
@@ -165,8 +166,8 @@ class RegistroViewModel @Inject constructor(
                 pensamientos = state.pensamientos,
                 comentariosExternos = state.comentariosExternos,
                 notasAdicionales = state.notasAdicionales,
-                notasVisibilidad = notasVisibilidad,
-                visibilidad = state.visibilidad
+                notasVisibilidad = allRoles,
+                visibilidad = allRoles
             )
 
             val result = if (state.id.isBlank()) {
