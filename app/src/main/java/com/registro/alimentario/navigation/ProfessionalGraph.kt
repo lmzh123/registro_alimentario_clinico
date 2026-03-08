@@ -108,6 +108,9 @@ fun NavGraphBuilder.professionalGraph(
         val registro = registros.firstOrNull { it.id == registroId } ?: return@composable
         val commentText by professionalViewModel.commentText.collectAsState()
         val comments by professionalViewModel.comments.collectAsState()
+        val editingCommentId by professionalViewModel.editingCommentId.collectAsState()
+        val editingCommentText by professionalViewModel.editingCommentText.collectAsState()
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
         androidx.compose.runtime.LaunchedEffect(registroId) {
             professionalViewModel.loadComments(registroId)
@@ -118,8 +121,16 @@ fun NavGraphBuilder.professionalGraph(
             comments = comments,
             professionalRole = currentRole ?: UserRole.NUTRICIONISTA,
             commentText = commentText,
+            currentUserId = currentUserId,
+            editingCommentId = editingCommentId,
+            editingCommentText = editingCommentText,
             onCommentTextChange = { professionalViewModel.updateCommentText(it) },
             onSubmitComment = { professionalViewModel.submitComment(registroId) },
+            onEditCommentStart = { professionalViewModel.startEditComment(it) },
+            onEditCommentTextChange = { professionalViewModel.updateEditingCommentText(it) },
+            onEditCommentSubmit = { professionalViewModel.submitEditComment(registroId) },
+            onEditCommentCancel = { professionalViewModel.cancelEditComment() },
+            onDeleteComment = { comment -> professionalViewModel.deleteComment(registroId, comment.id) },
             onNavigateBack = { navController.popBackStack() },
             onPhotoTapped = { url -> navController.navigate(NavRoutes.photoViewer(url)) }
         )

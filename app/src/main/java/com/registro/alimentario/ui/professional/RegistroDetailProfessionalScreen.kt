@@ -37,8 +37,16 @@ fun RegistroDetailProfessionalScreen(
     comments: List<ComentarioClinico>,
     professionalRole: UserRole,
     commentText: String,
+    currentUserId: String,
+    editingCommentId: String?,
+    editingCommentText: String,
     onCommentTextChange: (String) -> Unit,
     onSubmitComment: () -> Unit,
+    onEditCommentStart: (ComentarioClinico) -> Unit,
+    onEditCommentTextChange: (String) -> Unit,
+    onEditCommentSubmit: () -> Unit,
+    onEditCommentCancel: () -> Unit,
+    onDeleteComment: (ComentarioClinico) -> Unit,
     onNavigateBack: () -> Unit,
     onPhotoTapped: (String) -> Unit
 ) {
@@ -83,7 +91,17 @@ fun RegistroDetailProfessionalScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-            CommentList(comments = comments)
+            CommentList(
+                comments = comments,
+                currentUserId = currentUserId,
+                editingCommentId = editingCommentId,
+                editingCommentText = editingCommentText,
+                onEditStart = onEditCommentStart,
+                onEditTextChange = onEditCommentTextChange,
+                onEditSubmit = onEditCommentSubmit,
+                onEditCancel = onEditCommentCancel,
+                onDelete = onDeleteComment
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
             CommentInput(

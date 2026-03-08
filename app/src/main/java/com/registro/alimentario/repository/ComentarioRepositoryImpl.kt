@@ -55,4 +55,28 @@ class ComentarioRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun updateComment(registroId: String, commentId: String, texto: String): Result<Unit> {
+        return try {
+            firestore.collection("registros").document(registroId)
+                .collection("comentarios").document(commentId)
+                .update("texto", texto)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteComment(registroId: String, commentId: String): Result<Unit> {
+        return try {
+            firestore.collection("registros").document(registroId)
+                .collection("comentarios").document(commentId)
+                .delete()
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -108,6 +108,12 @@
     <string name="no_comments">Tu equipo de salud aún no ha dejado comentarios en este registro.</string>
     <string name="comment_hint">Dejá tu comentario clínico…</string>
     <string name="send_comment_cd">Enviar comentario</string>
+    <string name="edit_comment_cd">Editar comentario</string>
+    <string name="delete_comment_cd">Eliminar comentario</string>
+    <string name="save_comment_edit_cd">Guardar edición</string>
+    <string name="cancel_comment_edit_cd">Cancelar edición</string>
+    <string name="delete_comment_confirm_title">¿Eliminar comentario?</string>
+    <string name="delete_comment_confirm_message">Esta acción no se puede deshacer.</string>
 
     <!-- Crisis resources -->
     <string name="crisis_resources_button_cd">Recursos de apoyo en crisis</string>

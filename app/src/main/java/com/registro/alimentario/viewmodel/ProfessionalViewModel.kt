@@ -51,6 +51,12 @@ class ProfessionalViewModel @Inject constructor(
     private val _comments = MutableStateFlow<List<ComentarioClinico>>(emptyList())
     val comments: StateFlow<List<ComentarioClinico>> = _comments.asStateFlow()
 
+    private val _editingCommentId = MutableStateFlow<String?>(null)
+    val editingCommentId: StateFlow<String?> = _editingCommentId.asStateFlow()
+
+    private val _editingCommentText = MutableStateFlow("")
+    val editingCommentText: StateFlow<String> = _editingCommentText.asStateFlow()
+
     fun loadPatients() {
         val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
@@ -112,6 +118,38 @@ class ProfessionalViewModel @Inject constructor(
     fun loadComments(registroId: String) {
         viewModelScope.launch {
             comentarioRepository.getComentarios(registroId).collect { _comments.value = it }
+        }
+    }
+
+    fun startEditComment(comment: ComentarioClinico) {
+        _editingCommentId.value = comment.id
+        _editingCommentText.value = comment.texto
+    }
+
+    fun updateEditingCommentText(text: String) {
+        _editingCommentText.value = text
+    }
+
+    fun cancelEditComment() {
+        _editingCommentId.value = null
+        _editingCommentText.value = ""
+    }
+
+    fun submitEditComment(registroId: String) {
+        val commentId = _editingCommentId.value ?: return
+        val text = _editingCommentText.value.trim()
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            comentarioRepository.updateComment(registroId, commentId, text).fold(
+                onSuccess = { cancelEditComment() },
+                onFailure = { /* surface error */ }
+            )
+        }
+    }
+
+    fun deleteComment(registroId: String, commentId: String) {
+        viewModelScope.launch {
+            comentarioRepository.deleteComment(registroId, commentId)
         }
     }
 }

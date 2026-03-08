@@ -120,12 +120,18 @@ service cloud.firestore {
         allow read: if isProfessional() &&
           hasActiveConnection(get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id);
 
-        // Professionals can only create new comments (no update or delete)
+        // Professionals can create comments on accessible registros
         allow create: if isProfessional() &&
           hasActiveConnection(get(/databases/$(database)/documents/registros/$(registroId)).data.usuario_id) &&
           request.resource.data.profesional_id == request.auth.uid;
 
-        allow update, delete: if false;
+        // Professionals can update/delete only their own comments
+        allow update: if isProfessional() &&
+          resource.data.profesional_id == request.auth.uid &&
+          request.resource.data.profesional_id == request.auth.uid;
+
+        allow delete: if isProfessional() &&
+          resource.data.profesional_id == request.auth.uid;
       }
     }
 
