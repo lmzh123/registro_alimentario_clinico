@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.registro.alimentario.R
 
 @Composable
@@ -28,10 +28,17 @@ fun PhotoViewerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.scrim)
     ) {
-        AsyncImage(
+        SubcomposeAsyncImage(
             model = photoUrl,
             contentDescription = stringResource(R.string.photo_thumbnail_cd),
             contentScale = ContentScale.Fit,
+            error = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                )
+            },
             modifier = Modifier.fillMaxSize()
         )
         IconButton(

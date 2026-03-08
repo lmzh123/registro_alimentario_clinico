@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.registro.alimentario.model.ComentarioClinico
 import com.registro.alimentario.model.Registro
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
@@ -46,6 +47,9 @@ class ProfessionalViewModel @Inject constructor(
 
     private val _commentSent = MutableStateFlow(false)
     val commentSent: StateFlow<Boolean> = _commentSent.asStateFlow()
+
+    private val _comments = MutableStateFlow<List<ComentarioClinico>>(emptyList())
+    val comments: StateFlow<List<ComentarioClinico>> = _comments.asStateFlow()
 
     fun loadPatients() {
         val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
@@ -103,5 +107,11 @@ class ProfessionalViewModel @Inject constructor(
 
     fun resetCommentSent() {
         _commentSent.value = false
+    }
+
+    fun loadComments(registroId: String) {
+        viewModelScope.launch {
+            comentarioRepository.getComentarios(registroId).collect { _comments.value = it }
+        }
     }
 }

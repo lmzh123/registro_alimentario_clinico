@@ -21,9 +21,6 @@ import com.registro.alimentario.ui.shared.PhotoViewerScreen
 import com.registro.alimentario.viewmodel.AuthViewModel
 import com.registro.alimentario.viewmodel.ConnectionViewModel
 import com.registro.alimentario.viewmodel.RegistroViewModel
-import com.registro.alimentario.repository.ComentarioRepository
-import dagger.hilt.android.EntryPointAccessors
-import kotlinx.coroutines.flow.first
 
 fun NavGraphBuilder.patientGraph(
     navController: NavHostController,
@@ -118,10 +115,8 @@ fun NavGraphBuilder.patientGraph(
         val registros by registroViewModel.registros.collectAsState()
         val registro = registros.firstOrNull { it.id == registroId } ?: return@composable
 
-        // TODO: collect comments via ComentarioRepository directly or a shared VM
         RegistroDetailScreen(
             registro = registro,
-            comments = emptyList(), // wired below via ViewModel in full implementation
             onEdit = { navController.navigate(NavRoutes.editRegistro(registroId)) },
             onDelete = {
                 registroViewModel.deleteRegistro(registroId, registro.fotos)
@@ -184,8 +179,7 @@ fun NavGraphBuilder.patientGraph(
         route = NavRoutes.PHOTO_VIEWER,
         arguments = listOf(navArgument("photoUrl") { type = NavType.StringType })
     ) { backStack ->
-        val encodedUrl = backStack.arguments?.getString("photoUrl") ?: return@composable
-        val url = java.net.URLDecoder.decode(encodedUrl, "UTF-8")
+        val url = backStack.arguments?.getString("photoUrl") ?: return@composable
         PhotoViewerScreen(photoUrl = url, onClose = { navController.popBackStack() })
     }
 }

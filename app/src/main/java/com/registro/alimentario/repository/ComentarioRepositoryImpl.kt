@@ -35,7 +35,10 @@ class ComentarioRepositoryImpl @Inject constructor(
         return try {
             val user = auth.currentUser ?: return Result.failure(Exception("No autenticado"))
             val tokenResult = user.getIdToken(false).await()
-            val role = tokenResult.claims["role"] as? String ?: return Result.failure(Exception("Rol no encontrado"))
+            val role = tokenResult.claims["role"] as? String
+                ?: firestore.collection("users").document(user.uid).get().await()
+                    .getString("role")
+                ?: return Result.failure(Exception("Rol no encontrado"))
 
             val comment = ComentarioClinico(
                 profesionalId = user.uid,

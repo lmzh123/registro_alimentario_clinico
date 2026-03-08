@@ -77,7 +77,7 @@ fun RegistroDetailProfessionalScreen(
             // Psiquiatria: everything
             when (professionalRole) {
                 UserRole.NUTRICIONISTA -> NutricionistaView(registro, onPhotoTapped)
-                UserRole.PSICOLOGIA -> PsicologiaView(registro)
+                UserRole.PSICOLOGIA -> PsicologiaView(registro, onPhotoTapped)
                 UserRole.PSIQUIATRIA -> PsiquiatriaView(registro, onPhotoTapped)
                 UserRole.PACIENTE -> { /* guard — should never happen */ }
             }
@@ -134,7 +134,17 @@ private fun NutricionistaView(registro: Registro, onPhotoTapped: (String) -> Uni
 }
 
 @Composable
-private fun PsicologiaView(registro: Registro) {
+private fun PsicologiaView(registro: Registro, onPhotoTapped: (String) -> Unit) {
+    if (registro.fotos.isNotEmpty()) {
+        PhotoRow(
+            localUris = emptyList(),
+            uploadedUrls = registro.fotos,
+            onTakePhoto = {}, onChooseGallery = {},
+            onRemoveLocal = {}, onRemoveUploaded = {},
+            onPhotoTapped = onPhotoTapped,
+            editable = false
+        )
+    }
     ProfDetailSection(stringResource(R.string.behavioral_section_title)) {
         Text("${stringResource(R.string.atracon_label)}: ${registro.fueAtracon.id}")
         if (registro.desencadenanteAtracon.isNotBlank()) {
@@ -179,7 +189,7 @@ private fun PsicologiaView(registro: Registro) {
 private fun PsiquiatriaView(registro: Registro, onPhotoTapped: (String) -> Unit) {
     // Full access — show everything
     NutricionistaView(registro, onPhotoTapped)
-    PsicologiaView(registro)
+    PsicologiaView(registro, onPhotoTapped)
     // Notes shown if shared or if psiquiatria always gets them per spec
     if (registro.notasAdicionales.isNotBlank() &&
         (registro.notasVisibilidad.contains(UserRole.PSIQUIATRIA.id) || registro.notasVisibilidad.isEmpty().not())

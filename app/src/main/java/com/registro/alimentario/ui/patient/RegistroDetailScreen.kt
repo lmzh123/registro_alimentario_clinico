@@ -32,8 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.model.Registro
-import com.registro.alimentario.model.ComentarioClinico
-import com.registro.alimentario.ui.shared.components.CommentList
 import com.registro.alimentario.ui.shared.components.PhotoRow
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -42,7 +40,6 @@ import java.util.Locale
 @Composable
 fun RegistroDetailScreen(
     registro: Registro,
-    comments: List<ComentarioClinico>,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onNavigateBack: () -> Unit,
@@ -179,8 +176,6 @@ fun RegistroDetailScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            CommentList(comments = comments)
             Spacer(modifier = Modifier.height(32.dp))
         }
     }

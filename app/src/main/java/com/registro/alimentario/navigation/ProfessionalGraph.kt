@@ -107,8 +107,11 @@ fun NavGraphBuilder.professionalGraph(
         val registros by professionalViewModel.filteredRegistros.collectAsState()
         val registro = registros.firstOrNull { it.id == registroId } ?: return@composable
         val commentText by professionalViewModel.commentText.collectAsState()
-        // Comments would be collected from ComentarioRepository via a sub-VM in full impl
-        val comments = emptyList<com.registro.alimentario.model.ComentarioClinico>()
+        val comments by professionalViewModel.comments.collectAsState()
+
+        androidx.compose.runtime.LaunchedEffect(registroId) {
+            professionalViewModel.loadComments(registroId)
+        }
 
         RegistroDetailProfessionalScreen(
             registro = registro,
