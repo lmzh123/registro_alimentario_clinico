@@ -83,7 +83,11 @@ fun NavGraphBuilder.patientGraph(
         val registros by registroViewModel.registros.collectAsState()
         val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: return@composable
 
-        androidx.compose.runtime.LaunchedEffect(registroId) {
+        androidx.compose.runtime.LaunchedEffect(patientId) {
+            registroViewModel.loadPatientRegistros(patientId)
+        }
+
+        androidx.compose.runtime.LaunchedEffect(registroId, registros) {
             val registro = registros.firstOrNull { it.id == registroId }
             if (registro != null) registroViewModel.loadForEdit(registro)
         }
@@ -113,6 +117,12 @@ fun NavGraphBuilder.patientGraph(
         val registroId = backStack.arguments?.getString("registroId") ?: return@composable
         val registroViewModel: RegistroViewModel = hiltViewModel()
         val registros by registroViewModel.registros.collectAsState()
+        val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: return@composable
+
+        androidx.compose.runtime.LaunchedEffect(patientId) {
+            registroViewModel.loadPatientRegistros(patientId)
+        }
+
         val registro = registros.firstOrNull { it.id == registroId } ?: return@composable
 
         RegistroDetailScreen(
