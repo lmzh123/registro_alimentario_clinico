@@ -119,7 +119,6 @@ fun NavGraphBuilder.professionalGraph(
         RegistroDetailProfessionalScreen(
             registro = registro,
             comments = comments,
-            professionalRole = currentRole ?: UserRole.NUTRICIONISTA,
             commentText = commentText,
             currentUserId = currentUserId,
             editingCommentId = editingCommentId,
