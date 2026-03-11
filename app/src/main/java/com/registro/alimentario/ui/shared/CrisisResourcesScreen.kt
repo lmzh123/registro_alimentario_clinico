@@ -33,6 +33,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
+import com.registro.alimentario.model.Connection
+import com.registro.alimentario.model.UserRole
 
 data class CrisisResource(
     val name: String,
@@ -78,7 +80,8 @@ private val defaultResources = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrisisResourcesScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    activeConnections: List<Connection> = emptyList()
 ) {
     val context = LocalContext.current
 
@@ -112,6 +115,57 @@ fun CrisisResourcesScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
+
+            if (activeConnections.isNotEmpty()) {
+                item {
+                    Text(
+                        text = stringResource(R.string.crisis_team_section),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.crisis_team_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+                items(activeConnections) { connection ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = connection.therapistName,
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = UserRole.fromId(connection.therapistRole).displayName,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.crisis_hotlines_section),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
             items(defaultResources) { resource ->
                 resource.sectionTitle?.let { title ->
                     Spacer(modifier = Modifier.height(8.dp))

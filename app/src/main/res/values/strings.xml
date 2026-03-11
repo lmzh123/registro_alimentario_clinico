@@ -121,6 +121,9 @@
     <string name="crisis_resources_subtitle">Si estás pasando un momento difícil, estas personas pueden ayudarte.</string>
     <string name="crisis_call_cd">Llamar a %s</string>
     <string name="crisis_whatsapp_button">WhatsApp</string>
+    <string name="crisis_team_section">Tu equipo de salud</string>
+    <string name="crisis_team_description">Las siguientes personas forman parte de tu equipo de cuidado. Puedes contactarlas según lo que hayan acordado.</string>
+    <string name="crisis_hotlines_section">Líneas de apoyo</string>
 
     <!-- Notifications -->
     <string name="notification_settings_title">Recordatorios</string>

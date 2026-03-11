@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.google.firebase.auth.FirebaseAuth
+import com.registro.alimentario.model.Connection
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.ui.patient.CreateRegistroScreen
 import com.registro.alimentario.ui.patient.ManageTherapistsScreen
@@ -139,7 +140,20 @@ fun NavGraphBuilder.patientGraph(
     }
 
     composable(NavRoutes.CRISIS_RESOURCES) {
-        CrisisResourcesScreen(onNavigateBack = { navController.popBackStack() })
+        val connectionViewModel: ConnectionViewModel = hiltViewModel()
+        val patientId = FirebaseAuth.getInstance().currentUser?.uid ?: return@composable
+
+        androidx.compose.runtime.LaunchedEffect(patientId) {
+            connectionViewModel.loadPatientConnections(patientId)
+        }
+
+        val connections by connectionViewModel.patientConnections.collectAsState()
+        val activeConnections = connections.filter { it.status == Connection.STATUS_ACTIVE }
+
+        CrisisResourcesScreen(
+            onNavigateBack = { navController.popBackStack() },
+            activeConnections = activeConnections
+        )
     }
 
     composable(NavRoutes.NOTIFICATION_SETTINGS) {
