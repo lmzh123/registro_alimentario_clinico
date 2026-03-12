@@ -15,6 +15,15 @@
     <string name="register_login_prompt">¿Ya tenés cuenta?</string>
     <string name="register_login_link">Iniciá sesión</string>
     <string name="logout_label">Cerrar sesión</string>
+    <string name="register_confirm_password_label">Confirmar contraseña</string>
+    <string name="register_passwords_mismatch">Las contraseñas no coinciden</string>
+    <string name="show_password_cd">Mostrar contraseña</string>
+    <string name="hide_password_cd">Ocultar contraseña</string>
+    <string name="reset_password_link">¿Olvidaste tu contraseña?</string>
+    <string name="reset_password_dialog_title">Restablecer contraseña</string>
+    <string name="reset_password_dialog_body">Ingresá tu correo y te enviaremos un enlace para restablecerla.</string>
+    <string name="reset_password_success">Si ese correo tiene una cuenta, recibirás un enlace en breve.</string>
+    <string name="send_button">Enviar</string>
 
     <!-- Home -->
     <string name="patient_home_title">Mis registros</string>

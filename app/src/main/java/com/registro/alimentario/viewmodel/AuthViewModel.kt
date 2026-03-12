@@ -19,6 +19,13 @@ sealed class AuthUiState {
     data class Error(val message: String) : AuthUiState()
 }
 
+sealed class PasswordResetState {
+    object Idle : PasswordResetState()
+    object Loading : PasswordResetState()
+    object Sent : PasswordResetState()
+    data class Error(val message: String) : PasswordResetState()
+}
+
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
@@ -26,6 +33,9 @@ class AuthViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+
+    private val _passwordResetState = MutableStateFlow<PasswordResetState>(PasswordResetState.Idle)
+    val passwordResetState: StateFlow<PasswordResetState> = _passwordResetState.asStateFlow()
 
     private val _currentRole = MutableStateFlow<UserRole?>(null)
     val currentRole: StateFlow<UserRole?> = _currentRole.asStateFlow()
@@ -90,6 +100,23 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Idle
             _currentRole.value = null
         }
+    }
+
+    fun sendPasswordResetEmail(email: String) {
+        if (email.isBlank()) {
+            _passwordResetState.value = PasswordResetState.Error("Ingresá tu correo electrónico")
+            return
+        }
+        viewModelScope.launch {
+            _passwordResetState.value = PasswordResetState.Loading
+            // Always report success to avoid leaking whether an account exists
+            authRepository.sendPasswordResetEmail(email.trim())
+            _passwordResetState.value = PasswordResetState.Sent
+        }
+    }
+
+    fun resetPasswordResetState() {
+        _passwordResetState.value = PasswordResetState.Idle
     }
 
     fun resetState() {

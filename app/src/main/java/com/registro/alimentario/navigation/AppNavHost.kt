@@ -20,6 +20,7 @@ fun AppNavHost(
 ) {
     val uiState by authViewModel.uiState.collectAsState()
     val currentRole by authViewModel.currentRole.collectAsState()
+    val passwordResetState by authViewModel.passwordResetState.collectAsState()
 
     NavHost(
         navController = navController,
@@ -29,6 +30,7 @@ fun AppNavHost(
         composable(NavRoutes.LOGIN) {
             LoginScreen(
                 uiState = uiState,
+                passwordResetState = passwordResetState,
                 onLogin = { email, password -> authViewModel.login(email, password) },
                 onNavigateToRegister = { navController.navigate(NavRoutes.REGISTER) },
                 onLoginSuccess = {
@@ -39,7 +41,9 @@ fun AppNavHost(
                         popUpTo(NavRoutes.LOGIN) { inclusive = true }
                     }
                     authViewModel.resetState()
-                }
+                },
+                onSendPasswordReset = { email -> authViewModel.sendPasswordResetEmail(email) },
+                onPasswordResetStateDismissed = { authViewModel.resetPasswordResetState() }
             )
         }
 

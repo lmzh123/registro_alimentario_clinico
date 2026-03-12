@@ -13,6 +13,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -26,7 +28,6 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import com.registro.alimentario.model.UserRole
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.viewmodel.AuthUiState
@@ -56,8 +58,13 @@ fun RegisterScreen(
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var selectedRole by rememberSaveable { mutableStateOf(UserRole.PACIENTE) }
     var roleDropdownExpanded by rememberSaveable { mutableStateOf(false) }
+
+    val passwordsMatch = password == confirmPassword || confirmPassword.isEmpty()
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) onRegisterSuccess()
@@ -114,12 +121,55 @@ fun RegisterScreen(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text(stringResource(R.string.login_password_label)) },
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = stringResource(
+                                if (passwordVisible) R.string.hide_password_cd else R.string.show_password_cd
+                            )
+                        )
+                    }
+                },
+                supportingText = { Text("Mínimo 8 caracteres") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text(stringResource(R.string.register_confirm_password_label)) },
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
                 ),
-                supportingText = { Text("Mínimo 8 caracteres") },
+                trailingIcon = {
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = stringResource(
+                                if (confirmPasswordVisible) R.string.hide_password_cd else R.string.show_password_cd
+                            )
+                        )
+                    }
+                },
+                isError = !passwordsMatch,
+                supportingText = {
+                    if (!passwordsMatch) {
+                        Text(
+                            text = stringResource(R.string.register_passwords_mismatch),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -170,7 +220,7 @@ fun RegisterScreen(
             Button(
                 onClick = { onRegister(email, password, name, selectedRole) },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = uiState !is AuthUiState.Loading
+                enabled = uiState !is AuthUiState.Loading && passwordsMatch && confirmPassword.isNotEmpty()
             ) {
                 if (uiState is AuthUiState.Loading) {
                     CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
