@@ -183,6 +183,16 @@
     <string name="decline_request_message">Se rechazará la solicitud de %s.</string>
     <string name="no_patients_connected">Aún no tenés pacientes conectados.\nLos pacientes deben enviarte una solicitud de acceso.</string>
 
+    <!-- Email verification -->
+    <string name="verify_email_title">Verificá tu correo</string>
+    <string name="verify_email_body">Te enviamos un enlace de verificación a %s. Por favor revisá tu bandeja de entrada (y la carpeta de spam) antes de iniciar sesión.</string>
+    <string name="verify_email_not_verified">Tu correo aún no está verificado. Revisá tu bandeja de entrada.</string>
+    <string name="verify_email_resend_button">Reenviar correo de verificación</string>
+    <string name="verify_email_resend_dialog_title">Reenviar verificación</string>
+    <string name="verify_email_resend_dialog_body">Ingresá tu contraseña para reenviar el correo de verificación a %s.</string>
+    <string name="verify_email_resend_sent">Correo de verificación reenviado. Revisá tu bandeja de entrada.</string>
+    <string name="verify_email_back_to_login">Volver al inicio de sesión</string>
+
     <!-- General -->
     <string name="loading">Cargando…</string>
     <string name="back_cd">Volver</string>

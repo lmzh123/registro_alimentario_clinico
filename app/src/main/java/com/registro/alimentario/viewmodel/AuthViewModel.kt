@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.repository.AuthRepository
+import com.registro.alimentario.repository.EmailNotVerifiedException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,15 @@ sealed class AuthUiState {
     object Idle : AuthUiState()
     object Loading : AuthUiState()
     data class Success(val user: User) : AuthUiState()
+    data class EmailVerificationPending(val email: String) : AuthUiState()
     data class Error(val message: String) : AuthUiState()
+}
+
+sealed class ResendVerificationState {
+    object Idle : ResendVerificationState()
+    object Loading : ResendVerificationState()
+    object Sent : ResendVerificationState()
+    data class Error(val message: String) : ResendVerificationState()
 }
 
 sealed class PasswordResetState {
@@ -36,6 +45,9 @@ class AuthViewModel @Inject constructor(
 
     private val _passwordResetState = MutableStateFlow<PasswordResetState>(PasswordResetState.Idle)
     val passwordResetState: StateFlow<PasswordResetState> = _passwordResetState.asStateFlow()
+
+    private val _resendVerificationState = MutableStateFlow<ResendVerificationState>(ResendVerificationState.Idle)
+    val resendVerificationState: StateFlow<ResendVerificationState> = _resendVerificationState.asStateFlow()
 
     private val _currentRole = MutableStateFlow<UserRole?>(null)
     val currentRole: StateFlow<UserRole?> = _currentRole.asStateFlow()
@@ -64,8 +76,12 @@ class AuthViewModel @Inject constructor(
                     _currentRole.value = authRepository.getCurrentUserRole()
                     _uiState.value = AuthUiState.Success(user)
                 },
-                onFailure = {
-                    _uiState.value = AuthUiState.Error("Credenciales incorrectas. Verificá tu email y contraseña.")
+                onFailure = { e ->
+                    if (e is EmailNotVerifiedException) {
+                        _uiState.value = AuthUiState.EmailVerificationPending(email.trim())
+                    } else {
+                        _uiState.value = AuthUiState.Error("Credenciales incorrectas. Verificá tu email y contraseña.")
+                    }
                 }
             )
         }
@@ -84,8 +100,9 @@ class AuthViewModel @Inject constructor(
             _uiState.value = AuthUiState.Loading
             authRepository.register(email.trim(), password, displayName.trim(), role).fold(
                 onSuccess = { user ->
-                    _currentRole.value = role
-                    _uiState.value = AuthUiState.Success(user)
+                    // Account created but signed out — awaiting email verification
+                    _currentRole.value = null
+                    _uiState.value = AuthUiState.EmailVerificationPending(user.email)
                 },
                 onFailure = {
                     _uiState.value = AuthUiState.Error("No se pudo crear la cuenta. Intentá con otro email.")
@@ -117,6 +134,20 @@ class AuthViewModel @Inject constructor(
 
     fun resetPasswordResetState() {
         _passwordResetState.value = PasswordResetState.Idle
+    }
+
+    fun resendEmailVerification(email: String, password: String) {
+        viewModelScope.launch {
+            _resendVerificationState.value = ResendVerificationState.Loading
+            authRepository.resendEmailVerification(email, password).fold(
+                onSuccess = { _resendVerificationState.value = ResendVerificationState.Sent },
+                onFailure = { _resendVerificationState.value = ResendVerificationState.Error("No se pudo reenviar. Verificá tu contraseña.") }
+            )
+        }
+    }
+
+    fun resetResendVerificationState() {
+        _resendVerificationState.value = ResendVerificationState.Idle
     }
 
     fun resetState() {

@@ -21,6 +21,7 @@ fun AppNavHost(
     val uiState by authViewModel.uiState.collectAsState()
     val currentRole by authViewModel.currentRole.collectAsState()
     val passwordResetState by authViewModel.passwordResetState.collectAsState()
+    val resendVerificationState by authViewModel.resendVerificationState.collectAsState()
 
     NavHost(
         navController = navController,
@@ -31,6 +32,7 @@ fun AppNavHost(
             LoginScreen(
                 uiState = uiState,
                 passwordResetState = passwordResetState,
+                resendVerificationState = resendVerificationState,
                 onLogin = { email, password -> authViewModel.login(email, password) },
                 onNavigateToRegister = { navController.navigate(NavRoutes.REGISTER) },
                 onLoginSuccess = {
@@ -43,7 +45,9 @@ fun AppNavHost(
                     authViewModel.resetState()
                 },
                 onSendPasswordReset = { email -> authViewModel.sendPasswordResetEmail(email) },
-                onPasswordResetStateDismissed = { authViewModel.resetPasswordResetState() }
+                onPasswordResetStateDismissed = { authViewModel.resetPasswordResetState() },
+                onResendVerification = { email, password -> authViewModel.resendEmailVerification(email, password) },
+                onResendVerificationStateDismissed = { authViewModel.resetResendVerificationState() }
             )
         }
 

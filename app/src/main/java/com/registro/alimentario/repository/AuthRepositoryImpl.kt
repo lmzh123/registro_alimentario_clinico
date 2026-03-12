@@ -42,8 +42,11 @@ class AuthRepositoryImpl @Inject constructor(
             )
             firestore.collection("users").document(fbUser.uid).set(user.toFirestoreMap()).await()
 
-            // Force token refresh to pick up any custom claim set by Cloud Function
-            fbUser.getIdToken(true).await()
+            // Send verification email before allowing access
+            fbUser.sendEmailVerification().await()
+
+            // Sign out so the user cannot access the app until verified
+            auth.signOut()
 
             Result.success(user)
         } catch (e: Exception) {
@@ -56,6 +59,12 @@ class AuthRepositoryImpl @Inject constructor(
             val result = auth.signInWithEmailAndPassword(email, password).await()
             val fbUser = result.user ?: return Result.failure(Exception("Error al iniciar sesión"))
 
+            // Block access until the user has verified ownership of their email
+            if (!fbUser.isEmailVerified) {
+                auth.signOut()
+                return Result.failure(EmailNotVerifiedException())
+            }
+
             // Force token refresh to ensure custom claims are current
             fbUser.getIdToken(true).await()
 
@@ -67,6 +76,19 @@ class AuthRepositoryImpl @Inject constructor(
             }
             Result.success(user)
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resendEmailVerification(email: String, password: String): Result<Unit> {
+        return try {
+            val result = auth.signInWithEmailAndPassword(email, password).await()
+            val fbUser = result.user ?: return Result.failure(Exception("No se pudo iniciar sesión"))
+            fbUser.sendEmailVerification().await()
+            auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            try { auth.signOut() } catch (_: Exception) {}
             Result.failure(e)
         }
     }

@@ -39,22 +39,29 @@ import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.viewmodel.AuthUiState
 import com.registro.alimentario.viewmodel.PasswordResetState
+import com.registro.alimentario.viewmodel.ResendVerificationState
 
 @Composable
 fun LoginScreen(
     uiState: AuthUiState,
     passwordResetState: PasswordResetState,
+    resendVerificationState: ResendVerificationState,
     onLogin: (email: String, password: String) -> Unit,
     onNavigateToRegister: () -> Unit,
     onLoginSuccess: () -> Unit,
     onSendPasswordReset: (email: String) -> Unit,
-    onPasswordResetStateDismissed: () -> Unit
+    onPasswordResetStateDismissed: () -> Unit,
+    onResendVerification: (email: String, password: String) -> Unit,
+    onResendVerificationStateDismissed: () -> Unit
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var showResetDialog by rememberSaveable { mutableStateOf(false) }
     var resetEmail by rememberSaveable { mutableStateOf("") }
+    var showResendDialog by rememberSaveable { mutableStateOf(false) }
+    var resendPassword by rememberSaveable { mutableStateOf("") }
+    var resendPasswordVisible by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState is AuthUiState.Success) onLoginSuccess()
@@ -64,6 +71,9 @@ fun LoginScreen(
     LaunchedEffect(showResetDialog) {
         if (showResetDialog && resetEmail.isBlank()) resetEmail = email
     }
+
+    // Pre-fill resend dialog email from the blocked login attempt
+    val pendingEmail = (uiState as? AuthUiState.EmailVerificationPending)?.email ?: email
 
     if (showResetDialog) {
         val isSent = passwordResetState is PasswordResetState.Sent
@@ -136,6 +146,92 @@ fun LoginScreen(
         )
     }
 
+    // Resend verification email dialog
+    if (showResendDialog) {
+        val isSent = resendVerificationState is ResendVerificationState.Sent
+        AlertDialog(
+            onDismissRequest = {
+                showResendDialog = false
+                resendPassword = ""
+                onResendVerificationStateDismissed()
+            },
+            title = { Text(stringResource(R.string.verify_email_resend_dialog_title)) },
+            text = {
+                if (isSent) {
+                    Text(stringResource(R.string.verify_email_resend_sent))
+                } else {
+                    Column {
+                        Text(stringResource(R.string.verify_email_resend_dialog_body, pendingEmail))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = resendPassword,
+                            onValueChange = { resendPassword = it },
+                            label = { Text(stringResource(R.string.login_password_label)) },
+                            visualTransformation = if (resendPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { resendPasswordVisible = !resendPasswordVisible }) {
+                                    Icon(
+                                        imageVector = if (resendPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                        contentDescription = stringResource(
+                                            if (resendPasswordVisible) R.string.hide_password_cd else R.string.show_password_cd
+                                        )
+                                    )
+                                }
+                            },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        if (resendVerificationState is ResendVerificationState.Error) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = resendVerificationState.message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (isSent) {
+                    TextButton(onClick = {
+                        showResendDialog = false
+                        resendPassword = ""
+                        onResendVerificationStateDismissed()
+                    }) {
+                        Text(stringResource(R.string.confirm_button))
+                    }
+                } else {
+                    TextButton(
+                        onClick = { onResendVerification(pendingEmail, resendPassword) },
+                        enabled = resendVerificationState !is ResendVerificationState.Loading && resendPassword.isNotBlank()
+                    ) {
+                        if (resendVerificationState is ResendVerificationState.Loading) {
+                            CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(stringResource(R.string.send_button))
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                if (!isSent) {
+                    TextButton(onClick = {
+                        showResendDialog = false
+                        resendPassword = ""
+                        onResendVerificationStateDismissed()
+                    }) {
+                        Text(stringResource(R.string.cancel_button))
+                    }
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -193,6 +289,22 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+
+        if (uiState is AuthUiState.EmailVerificationPending) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.verify_email_not_verified),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            TextButton(
+                onClick = { showResendDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.verify_email_resend_button))
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
