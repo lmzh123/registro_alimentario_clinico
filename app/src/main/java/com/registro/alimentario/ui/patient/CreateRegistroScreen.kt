@@ -18,7 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Sos
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -125,7 +125,7 @@ fun CreateRegistroScreen(
                 },
                 actions = {
                     IconButton(onClick = onCrisisResources) {
-                        Icon(Icons.Filled.FavoriteBorder, stringResource(R.string.crisis_resources_button_cd))
+                        Icon(Icons.Filled.Sos, stringResource(R.string.crisis_resources_button_cd))
                     }
                 }
             )
