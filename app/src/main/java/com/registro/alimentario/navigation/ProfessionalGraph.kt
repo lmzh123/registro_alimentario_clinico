@@ -29,6 +29,7 @@ fun NavGraphBuilder.professionalGraph(
         val currentRole by authViewModel.currentRole.collectAsState()
         val patients by connectionViewModel.therapistActivePatients.collectAsState()
         val pendingConnections by connectionViewModel.therapistPendingRequests.collectAsState()
+        val patientBadges by professionalViewModel.patientBadges.collectAsState()
 
         // Guard: patients who end up here go to patient graph
         if (currentRole == UserRole.PACIENTE) {
@@ -40,14 +41,19 @@ fun NavGraphBuilder.professionalGraph(
 
         val therapistId = FirebaseAuth.getInstance().currentUser?.uid
         androidx.compose.runtime.LaunchedEffect(therapistId) {
-            therapistId?.let { connectionViewModel.loadTherapistConnections(it) }
+            therapistId?.let {
+                connectionViewModel.loadTherapistConnections(it)
+                professionalViewModel.loadPatientBadges(it)
+            }
         }
 
         ProfessionalHomeScreen(
             role = currentRole ?: UserRole.NUTRICIONISTA,
             patients = patients,
             pendingConnections = pendingConnections,
+            patientBadges = patientBadges,
             onPatientSelected = { patient ->
+                professionalViewModel.markPatientAsSeen(patient.uid)
                 navController.navigate(
                     NavRoutes.patientRegistroList(patient.uid, patient.displayName.ifBlank { patient.email })
                 )
@@ -77,7 +83,7 @@ fun NavGraphBuilder.professionalGraph(
         val professionalViewModel: ProfessionalViewModel = hiltViewModel()
         val currentRole by authViewModel.currentRole.collectAsState()
         val registros by professionalViewModel.filteredRegistros.collectAsState()
-        val filter by professionalViewModel.filteredRegistros.collectAsState()
+        val registroBadges by professionalViewModel.registroBadges.collectAsState()
 
         androidx.compose.runtime.LaunchedEffect(patientId, currentRole) {
             currentRole?.let { professionalViewModel.loadRegistrosForPatient(patientId, it.id) }
@@ -87,8 +93,12 @@ fun NavGraphBuilder.professionalGraph(
             patientName = patientName,
             registros = registros,
             currentFilter = com.registro.alimentario.viewmodel.RegistroFilter(),
+            registroBadges = registroBadges,
             onFilterChanged = { professionalViewModel.setFilter(it) },
-            onRegistroTapped = { id -> navController.navigate(NavRoutes.registroDetailProfessional(id)) },
+            onRegistroTapped = { id ->
+                professionalViewModel.markRegistroAsSeen(id)
+                navController.navigate(NavRoutes.registroDetailProfessional(id))
+            },
             onNavigateBack = { navController.popBackStack() }
         )
     }

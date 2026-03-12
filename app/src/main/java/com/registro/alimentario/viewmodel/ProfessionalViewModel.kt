@@ -9,11 +9,14 @@ import com.registro.alimentario.model.Registro
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.repository.ComentarioRepository
+import com.registro.alimentario.repository.ProfessionalReadRepository
 import com.registro.alimentario.repository.ProfessionalRepository
+import com.registro.alimentario.repository.ConnectionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -30,7 +33,9 @@ data class RegistroFilter(
 @HiltViewModel
 class ProfessionalViewModel @Inject constructor(
     private val professionalRepository: ProfessionalRepository,
-    private val comentarioRepository: ComentarioRepository
+    private val comentarioRepository: ComentarioRepository,
+    private val professionalReadRepository: ProfessionalReadRepository,
+    private val connectionRepository: ConnectionRepository
 ) : ViewModel() {
 
     private val _patients = MutableStateFlow<List<User>>(emptyList())
@@ -57,6 +62,45 @@ class ProfessionalViewModel @Inject constructor(
     private val _editingCommentText = MutableStateFlow("")
     val editingCommentText: StateFlow<String> = _editingCommentText.asStateFlow()
 
+    private val _patientBadges = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val patientBadges: StateFlow<Map<String, Boolean>> = _patientBadges.asStateFlow()
+
+    private val _registroBadges = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val registroBadges: StateFlow<Map<String, Boolean>> = _registroBadges.asStateFlow()
+
+    fun loadPatientBadges(therapistId: String) {
+        viewModelScope.launch {
+            connectionRepository.getAllConnectionsForTherapist(therapistId)
+                .combine(professionalReadRepository.observeReads(therapistId)) { connections, reads ->
+                    connections
+                        .filter { it.status == com.registro.alimentario.model.Connection.STATUS_ACTIVE }
+                        .associate { conn ->
+                            val lastRegistroAt = conn.lastRegistroAt
+                            val lastSeen = reads.patientLastSeen[conn.patientId]
+                            val hasBadge = lastRegistroAt != null &&
+                                (lastSeen == null || lastRegistroAt > lastSeen)
+                            conn.patientId to hasBadge
+                        }
+                }.collect { _patientBadges.value = it }
+        }
+    }
+
+    fun markPatientAsSeen(patientId: String) {
+        val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            professionalReadRepository.markPatientAsSeen(therapistId, patientId)
+            _patientBadges.value = _patientBadges.value.toMutableMap().also { it[patientId] = false }
+        }
+    }
+
+    fun markRegistroAsSeen(registroId: String) {
+        val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            professionalReadRepository.markRegistroAsSeen(therapistId, registroId)
+            _registroBadges.value = _registroBadges.value.toMutableMap().also { it[registroId] = false }
+        }
+    }
+
     fun loadPatients() {
         val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
@@ -68,11 +112,22 @@ class ProfessionalViewModel @Inject constructor(
     }
 
     fun loadRegistrosForPatient(patientId: String, professionalRole: String) {
+        val therapistId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
-            professionalRepository.getSharedRegistrosForPatient(patientId, professionalRole).collect { list ->
-                _allRegistros.value = list
-                applyFilter()
-            }
+            professionalRepository.getSharedRegistrosForPatient(patientId, professionalRole)
+                .combine(professionalReadRepository.observeReads(therapistId)) { list, reads ->
+                    list to reads
+                }.collect { (list, reads) ->
+                    _allRegistros.value = list
+                    applyFilter()
+                    _registroBadges.value = list.associate { registro ->
+                        val lastCommentAt = registro.lastCommentAt
+                        val lastSeen = reads.registroLastSeen[registro.id]
+                        val hasBadge = lastCommentAt != null &&
+                            (lastSeen == null || lastCommentAt > lastSeen)
+                        registro.id to hasBadge
+                    }
+                }
         }
     }
 

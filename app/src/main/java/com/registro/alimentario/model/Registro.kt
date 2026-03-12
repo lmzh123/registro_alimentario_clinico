@@ -35,7 +35,8 @@ data class Registro(
     val visibilidad: List<String> = emptyList(),
     // Timestamps
     val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val updatedAt: Timestamp = Timestamp.now(),
+    val lastCommentAt: Timestamp? = null
 ) {
     fun toFirestoreMap(): Map<String, Any?> = mapOf(
         "usuario_id" to usuarioId,
@@ -94,7 +95,8 @@ data class Registro(
                 notasVisibilidad = (data["notas_visibilidad"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 visibilidad = (data["visibilidad"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
                 createdAt = data["createdAt"] as? Timestamp ?: Timestamp.now(),
-                updatedAt = data["updatedAt"] as? Timestamp ?: Timestamp.now()
+                updatedAt = data["updatedAt"] as? Timestamp ?: Timestamp.now(),
+                lastCommentAt = data["lastCommentAt"] as? Timestamp
             )
         }
     }

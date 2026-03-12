@@ -34,6 +34,15 @@ class RegistroApplication : Application() {
                 description = "Notificaciones cuando tu equipo de salud comenta en un registro"
                 manager.createNotificationChannel(this)
             }
+
+            NotificationChannel(
+                "professional_notifications",
+                "Actividad de pacientes",
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = "Notificaciones para profesionales sobre nuevos registros y comentarios de colegas"
+                manager.createNotificationChannel(this)
+            }
         }
     }
 }

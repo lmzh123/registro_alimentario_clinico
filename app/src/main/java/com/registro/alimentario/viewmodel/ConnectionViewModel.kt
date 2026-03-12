@@ -47,6 +47,10 @@ class ConnectionViewModel @Inject constructor(
     private val _therapistActivePatients = MutableStateFlow<List<User>>(emptyList())
     val therapistActivePatients: StateFlow<List<User>> = _therapistActivePatients.asStateFlow()
 
+    /** Active connections for the current therapist (with lastRegistroAt). */
+    private val _therapistActiveConnections = MutableStateFlow<List<Connection>>(emptyList())
+    val therapistActiveConnections: StateFlow<List<Connection>> = _therapistActiveConnections.asStateFlow()
+
     // ─── Patient actions ───────────────────────────────────────────────────
 
     fun onSearchQueryChange(query: String) {
@@ -125,6 +129,7 @@ class ConnectionViewModel @Inject constructor(
             connectionRepository.getAllConnectionsForTherapist(therapistId).collect { list ->
                 _therapistPendingRequests.value = list.filter { it.status == Connection.STATUS_PENDING }
                 val activeConnections = list.filter { it.status == Connection.STATUS_ACTIVE }
+                _therapistActiveConnections.value = activeConnections
                 // Fetch full User objects for active patient IDs
                 val patients = activeConnections.mapNotNull { conn ->
                     connectionRepository.getUserById(conn.patientId).getOrNull()

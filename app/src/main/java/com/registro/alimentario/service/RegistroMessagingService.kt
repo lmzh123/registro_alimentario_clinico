@@ -31,8 +31,23 @@ class RegistroMessagingService : FirebaseMessagingService() {
 
         when (type) {
             "clinical_comment" -> showCommentNotification(registroId)
+            "new_registro" -> {
+                val patientName = message.data["patientName"] ?: ""
+                showNewRegistroNotification(patientName)
+            }
+            "new_comment_for_professional" -> showNewCommentForProfessionalNotification(registroId)
             else -> { /* unhandled message type */ }
         }
+    }
+
+    private fun mainActivityIntent(): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        return PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     private fun showCommentNotification(registroId: String?) {
@@ -55,6 +70,32 @@ class RegistroMessagingService : FirebaseMessagingService() {
             .setContentText(getString(R.string.notification_comment_body, "tu equipo"))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .build()
+
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+
+    private fun showNewRegistroNotification(patientName: String) {
+        val notification = NotificationCompat.Builder(this, "professional_notifications")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(getString(R.string.notif_new_registro_title))
+            .setContentText(getString(R.string.notif_new_registro_body, patientName))
+            .setAutoCancel(true)
+            .setContentIntent(mainActivityIntent())
+            .build()
+
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+
+    private fun showNewCommentForProfessionalNotification(registroId: String?) {
+        val notification = NotificationCompat.Builder(this, "professional_notifications")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(getString(R.string.notif_new_comment_professional_title))
+            .setContentText(getString(R.string.notif_new_comment_professional_body))
+            .setAutoCancel(true)
+            .setContentIntent(mainActivityIntent())
             .build()
 
         val manager = getSystemService(NotificationManager::class.java)

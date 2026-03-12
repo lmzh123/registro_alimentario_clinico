@@ -16,7 +16,8 @@ data class Connection(
     val therapistRole: String = "",
     val status: String = STATUS_PENDING,
     val createdAt: Timestamp = Timestamp.now(),
-    val updatedAt: Timestamp = Timestamp.now()
+    val updatedAt: Timestamp = Timestamp.now(),
+    val lastRegistroAt: Timestamp? = null
 ) {
     fun toFirestoreMap(): Map<String, Any?> = mapOf(
         "patientId" to patientId,
@@ -44,7 +45,8 @@ data class Connection(
             therapistRole = data["therapistRole"] as? String ?: "",
             status = data["status"] as? String ?: STATUS_PENDING,
             createdAt = data["createdAt"] as? Timestamp ?: Timestamp.now(),
-            updatedAt = data["updatedAt"] as? Timestamp ?: Timestamp.now()
+            updatedAt = data["updatedAt"] as? Timestamp ?: Timestamp.now(),
+            lastRegistroAt = data["lastRegistroAt"] as? Timestamp
         )
     }
 }

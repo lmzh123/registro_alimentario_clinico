@@ -19,7 +19,7 @@
     <!-- Home -->
     <string name="patient_home_title">Mis registros</string>
     <string name="new_registro_button">Nuevo registro</string>
-    <string name="empty_registros">Cuando quieras, podés registrar tu primera comida del día.\nEsto es solo para vos y tu equipo de salud.</string>
+    <string name="empty_registros">Cuando quieras, puedes registrar tu primera comida del día.\nEsto es solo para ti y tu equipo de salud.</string>
 
     <!-- Registro form -->
     <string name="registro_form_title_new">Nuevo registro</string>
@@ -132,6 +132,10 @@
     <string name="notification_reminder_template">¿Cómo fue tu %s hoy? Cuando quieras, podés registrarlo.</string>
     <string name="notification_comment_title">Nuevo comentario de tu equipo</string>
     <string name="notification_comment_body">Tu equipo de %s dejó un comentario en uno de tus registros.</string>
+    <string name="notif_new_registro_title">Nuevo registro de paciente</string>
+    <string name="notif_new_registro_body">Tu paciente %1$s registró una nueva entrada.</string>
+    <string name="notif_new_comment_professional_title">Nuevo comentario en un registro</string>
+    <string name="notif_new_comment_professional_body">Un colega dejó un comentario en el registro de tu paciente.</string>
 
     <!-- Permissions -->
     <string name="permission_camera_rationale">Para tomar fotos de tus comidas necesitamos acceso a la cámara.</string>

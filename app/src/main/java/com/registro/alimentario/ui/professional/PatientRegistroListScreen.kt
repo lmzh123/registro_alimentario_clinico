@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.model.Registro
+import com.registro.alimentario.ui.shared.components.NewItemBadge
 import com.registro.alimentario.viewmodel.RegistroFilter
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,6 +53,7 @@ fun PatientRegistroListScreen(
     patientName: String,
     registros: List<Registro>,
     currentFilter: RegistroFilter,
+    registroBadges: Map<String, Boolean> = emptyMap(),
     onFilterChanged: (RegistroFilter) -> Unit,
     onRegistroTapped: (String) -> Unit,
     onNavigateBack: () -> Unit
@@ -98,10 +100,16 @@ fun PatientRegistroListScreen(
                             .clickable { onRegistroTapped(registro.id) }
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = registro.tipoComida.displayName,
-                                style = MaterialTheme.typography.titleSmall
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = registro.tipoComida.displayName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (registroBadges[registro.id] == true) {
+                                    NewItemBadge(modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
                             Text(
                                 text = registroDateFormat.format(registro.fechaHora.toDate()),
                                 style = MaterialTheme.typography.bodySmall,

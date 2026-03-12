@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -33,6 +34,7 @@ import com.registro.alimentario.R
 import com.registro.alimentario.model.Connection
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
+import com.registro.alimentario.ui.shared.components.NewItemBadge
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +42,7 @@ fun ProfessionalHomeScreen(
     role: UserRole,
     patients: List<User>,
     pendingConnections: List<Connection>,
+    patientBadges: Map<String, Boolean> = emptyMap(),
     onPatientSelected: (User) -> Unit,
     onAcceptRequest: (connectionId: String) -> Unit,
     onDeclineRequest: (connectionId: String) -> Unit,
@@ -134,10 +137,16 @@ fun ProfessionalHomeScreen(
                             .clickable { onPatientSelected(patient) }
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = patient.displayName.ifBlank { patient.email },
-                                style = MaterialTheme.typography.titleSmall
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = patient.displayName.ifBlank { patient.email },
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (patientBadges[patient.uid] == true) {
+                                    NewItemBadge(modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
                         }
                     }
                 }
