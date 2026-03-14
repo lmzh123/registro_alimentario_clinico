@@ -52,6 +52,9 @@ class AuthViewModel @Inject constructor(
     private val _currentRole = MutableStateFlow<UserRole?>(null)
     val currentRole: StateFlow<UserRole?> = _currentRole.asStateFlow()
 
+    private val _isCheckingAuth = MutableStateFlow(true)
+    val isCheckingAuth: StateFlow<Boolean> = _isCheckingAuth.asStateFlow()
+
     init {
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
@@ -60,6 +63,7 @@ class AuthViewModel @Inject constructor(
                 } else {
                     _currentRole.value = authRepository.getCurrentUserRole()
                 }
+                _isCheckingAuth.value = false
             }
         }
     }

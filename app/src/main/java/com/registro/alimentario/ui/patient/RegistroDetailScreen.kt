@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Sos
@@ -44,10 +45,30 @@ fun RegistroDetailScreen(
     onDelete: () -> Unit,
     onNavigateBack: () -> Unit,
     onPhotoTapped: (String) -> Unit,
-    onCrisisResources: () -> Unit
+    onCrisisResources: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val dateFormat = SimpleDateFormat("EEEE dd/MM/yyyy, HH:mm", Locale("es"))
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(stringResource(R.string.logout_confirm_title)) },
+            text = { Text(stringResource(R.string.logout_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = { showLogoutDialog = false; onLogout() }) {
+                    Text(stringResource(R.string.confirm_button))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text(stringResource(R.string.cancel_button))
+                }
+            }
+        )
+    }
 
     if (showDeleteDialog) {
         AlertDialog(
@@ -79,6 +100,9 @@ fun RegistroDetailScreen(
                 actions = {
                     IconButton(onClick = onCrisisResources) {
                         Icon(Icons.Filled.Sos, stringResource(R.string.crisis_resources_button_cd))
+                    }
+                    IconButton(onClick = { showLogoutDialog = true }) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, stringResource(R.string.logout_cd))
                     }
                     IconButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, stringResource(R.string.edit_button))

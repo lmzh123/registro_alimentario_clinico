@@ -1,8 +1,14 @@
 package com.registro.alimentario.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -18,14 +24,30 @@ fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
+    val isCheckingAuth by authViewModel.isCheckingAuth.collectAsState()
     val uiState by authViewModel.uiState.collectAsState()
     val currentRole by authViewModel.currentRole.collectAsState()
     val passwordResetState by authViewModel.passwordResetState.collectAsState()
     val resendVerificationState by authViewModel.resendVerificationState.collectAsState()
 
+    if (isCheckingAuth) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val startDestination = remember {
+        when (currentRole) {
+            UserRole.PACIENTE -> NavRoutes.REGISTRO_HISTORY
+            null -> NavRoutes.LOGIN
+            else -> NavRoutes.PROFESSIONAL_HOME
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.LOGIN
+        startDestination = startDestination
     ) {
         // ── Auth ──────────────────────────────────────────────────────────────
         composable(NavRoutes.LOGIN) {

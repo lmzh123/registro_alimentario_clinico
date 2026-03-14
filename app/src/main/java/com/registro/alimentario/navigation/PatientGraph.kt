@@ -50,7 +50,11 @@ fun NavGraphBuilder.patientGraph(
             onCreateNew = { navController.navigate(NavRoutes.CREATE_REGISTRO) },
             onRegistroTapped = { id -> navController.navigate(NavRoutes.registroDetail(id)) },
             onCrisisResources = { navController.navigate(NavRoutes.CRISIS_RESOURCES) },
-            onManageTherapists = { navController.navigate(NavRoutes.MANAGE_THERAPISTS) }
+            onManageTherapists = { navController.navigate(NavRoutes.MANAGE_THERAPISTS) },
+            onLogout = {
+                authViewModel.logout()
+                navController.navigate(NavRoutes.LOGIN) { popUpTo(0) { inclusive = true } }
+            }
         )
     }
 
@@ -70,6 +74,10 @@ fun NavGraphBuilder.patientGraph(
             onSaveSuccess = {
                 registroViewModel.resetForm()
                 navController.popBackStack()
+            },
+            onLogout = {
+                authViewModel.logout()
+                navController.navigate(NavRoutes.LOGIN) { popUpTo(0) { inclusive = true } }
             }
         )
     }
@@ -104,6 +112,10 @@ fun NavGraphBuilder.patientGraph(
             onSaveSuccess = {
                 registroViewModel.resetForm()
                 navController.popBackStack()
+            },
+            onLogout = {
+                authViewModel.logout()
+                navController.navigate(NavRoutes.LOGIN) { popUpTo(0) { inclusive = true } }
             }
         )
     }
@@ -135,7 +147,11 @@ fun NavGraphBuilder.patientGraph(
             },
             onNavigateBack = { navController.popBackStack() },
             onPhotoTapped = { url -> navController.navigate(NavRoutes.photoViewer(url)) },
-            onCrisisResources = { navController.navigate(NavRoutes.CRISIS_RESOURCES) }
+            onCrisisResources = { navController.navigate(NavRoutes.CRISIS_RESOURCES) },
+            onLogout = {
+                authViewModel.logout()
+                navController.navigate(NavRoutes.LOGIN) { popUpTo(0) { inclusive = true } }
+            }
         )
     }
 
