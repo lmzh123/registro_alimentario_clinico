@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.registro.alimentario.model.EmocionEntry
 import com.registro.alimentario.model.FueAtracon
+import com.registro.alimentario.model.RestriccionPrevia
 import com.registro.alimentario.model.Registro
 import com.registro.alimentario.model.TipoComida
 import com.registro.alimentario.model.UserRole
@@ -30,6 +31,7 @@ data class RegistroFormState(
     val deseosPurgar: Boolean = false,
     val actuoSobrePurga: Boolean = false,
     val checqueoCuerpo: Boolean = false,
+    val restriccionPrevia: RestriccionPrevia? = null,
     val emocionesAntes: List<EmocionEntry> = emptyList(),
     val emocionesDespues: List<EmocionEntry> = emptyList(),
     val pensamientos: String = "",
@@ -81,6 +83,7 @@ class RegistroViewModel @Inject constructor(
             deseosPurgar = registro.deseosPurgar,
             actuoSobrePurga = registro.actuoSobrePurga,
             checqueoCuerpo = registro.checqueoCuerpo,
+            restriccionPrevia = registro.restriccionPrevia,
             emocionesAntes = registro.emocionesAntes,
             emocionesDespues = registro.emocionesDespues,
             pensamientos = registro.pensamientos,
@@ -161,6 +164,7 @@ class RegistroViewModel @Inject constructor(
                 deseosPurgar = state.deseosPurgar,
                 actuoSobrePurga = state.actuoSobrePurga,
                 checqueoCuerpo = state.checqueoCuerpo,
+                restriccionPrevia = state.restriccionPrevia,
                 emocionesAntes = state.emocionesAntes,
                 emocionesDespues = state.emocionesDespues,
                 pensamientos = state.pensamientos,

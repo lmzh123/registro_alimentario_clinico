@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.model.ComentarioClinico
 import com.registro.alimentario.model.Registro
+import com.registro.alimentario.model.RestriccionPrevia
 import com.registro.alimentario.ui.shared.components.CommentInput
 import com.registro.alimentario.ui.shared.components.CommentList
 import com.registro.alimentario.ui.shared.components.PhotoRow
@@ -148,6 +149,14 @@ private fun ProfesionalView(registro: Registro, onPhotoTapped: (String) -> Unit)
             Text("Actuó sobre purga: ${if (registro.actuoSobrePurga) "Sí" else "No"}")
         }
         Text("${stringResource(R.string.chequeo_label)}: ${if (registro.checqueoCuerpo) "Sí" else "No"}")
+        registro.restriccionPrevia?.let {
+            Text("${stringResource(R.string.restriccion_label)}: ${stringResource(when (it) {
+                RestriccionPrevia.SALTE_COMIDA -> R.string.restriccion_salte_comida
+                RestriccionPrevia.COMI_MENOS -> R.string.restriccion_comi_menos
+                RestriccionPrevia.RETRASE_COMIDA -> R.string.restriccion_retrase_comida
+                RestriccionPrevia.NO_HUBO -> R.string.restriccion_no_hubo
+            })}")
+        }
     }
     if (registro.emocionesAntes.isNotEmpty()) {
         ProfDetailSection(stringResource(R.string.emotions_before_label)) {

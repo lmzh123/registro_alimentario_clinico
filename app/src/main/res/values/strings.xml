@@ -55,6 +55,11 @@
     <string name="purga_actuo_label">¿Actuaste sobre ese deseo?</string>
     <string name="chequeo_label">¿Hubo revisión del cuerpo antes, durante o después de comer?</string>
     <string name="chequeo_hint">Ej: mirarse al espejo, medirse, pesarse</string>
+    <string name="restriccion_label">¿Hubo restricción antes de esta comida?</string>
+    <string name="restriccion_salte_comida">Salté una comida</string>
+    <string name="restriccion_comi_menos">Comí menos de lo que necesitaba</string>
+    <string name="restriccion_retrase_comida">Retrasé la comida</string>
+    <string name="restriccion_no_hubo">No hubo restricción</string>
 
     <!-- Emotions -->
     <string name="emotions_section_title">Estado emocional</string>

@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.registro.alimentario.R
 import com.registro.alimentario.model.Registro
+import com.registro.alimentario.model.RestriccionPrevia
 import com.registro.alimentario.ui.shared.components.PhotoRow
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -168,6 +169,14 @@ fun RegistroDetailScreen(
                     Text("${stringResource(R.string.purga_actuo_label)}: ${if (registro.actuoSobrePurga) "Sí" else "No"}")
                 }
                 Text("${stringResource(R.string.chequeo_label)}: ${if (registro.checqueoCuerpo) "Sí" else "No"}")
+                registro.restriccionPrevia?.let {
+                    Text("${stringResource(R.string.restriccion_label)}: ${stringResource(when (it) {
+                        RestriccionPrevia.SALTE_COMIDA -> R.string.restriccion_salte_comida
+                        RestriccionPrevia.COMI_MENOS -> R.string.restriccion_comi_menos
+                        RestriccionPrevia.RETRASE_COMIDA -> R.string.restriccion_retrase_comida
+                        RestriccionPrevia.NO_HUBO -> R.string.restriccion_no_hubo
+                    })}")
+                }
             }
 
             if (registro.emocionesAntes.isNotEmpty()) {

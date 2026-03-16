@@ -2,6 +2,14 @@ package com.registro.alimentario.model
 
 import com.google.firebase.Timestamp
 
+enum class RestriccionPrevia(val id: String) {
+    SALTE_COMIDA("salte_comida"),
+    COMI_MENOS("comi_menos"),
+    RETRASE_COMIDA("retrase_comida"),
+    NO_HUBO("no_hubo");
+    companion object { fun fromId(id: String?) = entries.firstOrNull { it.id == id } }
+}
+
 enum class FueAtracon(val id: String) {
     SI("si"), NO("no"), NO_SE("no_se");
     companion object { fun fromId(id: String) = entries.firstOrNull { it.id == id } ?: NO }
@@ -22,6 +30,7 @@ data class Registro(
     val deseosPurgar: Boolean = false,
     val actuoSobrePurga: Boolean = false,
     val checqueoCuerpo: Boolean = false,
+    val restriccionPrevia: RestriccionPrevia? = null,
     // Emotions
     val emocionesAntes: List<EmocionEntry> = emptyList(),
     val emocionesDespues: List<EmocionEntry> = emptyList(),
@@ -51,6 +60,7 @@ data class Registro(
         "deseos_purgar" to deseosPurgar,
         "actuo_sobre_purga" to actuoSobrePurga,
         "chequeo_cuerpo" to checqueoCuerpo,
+        "restriccion_previa" to restriccionPrevia?.id,
         "emociones_antes" to emocionesAntes.map { mapOf("tipo" to it.tipo.id, "texto" to it.textoLibre) },
         "emociones_despues" to emocionesDespues.map { mapOf("tipo" to it.tipo.id, "texto" to it.textoLibre) },
         "pensamientos" to pensamientos,
@@ -87,6 +97,7 @@ data class Registro(
                 deseosPurgar = data["deseos_purgar"] as? Boolean ?: false,
                 actuoSobrePurga = data["actuo_sobre_purga"] as? Boolean ?: false,
                 checqueoCuerpo = data["chequeo_cuerpo"] as? Boolean ?: false,
+                restriccionPrevia = RestriccionPrevia.fromId(data["restriccion_previa"] as? String),
                 emocionesAntes = emocionesAntesList,
                 emocionesDespues = emocionesDespuesList,
                 pensamientos = data["pensamientos"] as? String ?: "",

@@ -55,6 +55,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.registro.alimentario.R
 import com.registro.alimentario.model.FueAtracon
+import com.registro.alimentario.model.RestriccionPrevia
 import com.registro.alimentario.model.TipoComida
 import com.registro.alimentario.ui.shared.components.EmotionPicker
 import com.registro.alimentario.ui.shared.components.PhotoRow
@@ -258,6 +259,11 @@ fun CreateRegistroScreen(
                 checked = formState.checqueoCuerpo,
                 onCheckedChange = { onFieldUpdate { copy(checqueoCuerpo = it) } }
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            RestriccionPreviaSelector(
+                selected = formState.restriccionPrevia,
+                onSelected = { onFieldUpdate { copy(restriccionPrevia = it) } }
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             // ── Emotions ──
@@ -381,6 +387,31 @@ private fun MealTypeDropdown(
                     text = { Text(tipo.displayName) },
                     onClick = { onSelected(tipo); expanded = false }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RestriccionPreviaSelector(
+    selected: RestriccionPrevia?,
+    onSelected: (RestriccionPrevia) -> Unit
+) {
+    Column {
+        Text(
+            text = stringResource(R.string.restriccion_label),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        RestriccionPrevia.entries.forEach { option ->
+            val label = when (option) {
+                RestriccionPrevia.SALTE_COMIDA -> stringResource(R.string.restriccion_salte_comida)
+                RestriccionPrevia.COMI_MENOS -> stringResource(R.string.restriccion_comi_menos)
+                RestriccionPrevia.RETRASE_COMIDA -> stringResource(R.string.restriccion_retrase_comida)
+                RestriccionPrevia.NO_HUBO -> stringResource(R.string.restriccion_no_hubo)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(selected = selected == option, onClick = { onSelected(option) })
+                Text(label, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
