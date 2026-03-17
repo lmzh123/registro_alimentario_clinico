@@ -51,7 +51,11 @@ service cloud.firestore {
         isProfessional() &&
         hasActiveConnection(uid);
       allow create: if request.auth != null && request.auth.uid == uid;
-      allow update, delete: if false;
+      // Owner can update only their fcmToken (all other fields remain locked to Cloud Functions).
+      allow update: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fcmToken']);
+      allow delete: if false;
     }
 
     // ─── /connections/{connectionId} ─────────────────────────────────────────

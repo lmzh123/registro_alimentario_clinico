@@ -36,6 +36,7 @@ class RegistroMessagingService : FirebaseMessagingService() {
                 showNewRegistroNotification(patientName)
             }
             "new_comment_for_professional" -> showNewCommentForProfessionalNotification(registroId)
+            "inactivity_alert" -> showInactivityNotification()
             else -> { /* unhandled message type */ }
         }
     }
@@ -87,6 +88,20 @@ class RegistroMessagingService : FirebaseMessagingService() {
 
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+
+    private fun showInactivityNotification() {
+        val body = getString(R.string.notif_inactivity_body)
+        val notification = NotificationCompat.Builder(this, "meal_reminders")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(getString(R.string.notif_inactivity_title))
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setAutoCancel(true)
+            .setContentIntent(mainActivityIntent())
+            .build()
+        getSystemService(NotificationManager::class.java)
+            .notify(System.currentTimeMillis().toInt(), notification)
     }
 
     private fun showNewCommentForProfessionalNotification(registroId: String?) {

@@ -2,6 +2,7 @@ package com.registro.alimentario.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
 import kotlinx.coroutines.channels.awaitClose
@@ -67,6 +68,16 @@ class AuthRepositoryImpl @Inject constructor(
 
             // Force token refresh to ensure custom claims are current
             fbUser.getIdToken(true).await()
+
+            // Save the current FCM token so push notifications work immediately
+            try {
+                val fcmToken = FirebaseMessaging.getInstance().token.await()
+                android.util.Log.d("FCM_TOKEN", "Token fetched: $fcmToken")
+                firestore.collection("users").document(fbUser.uid).update("fcmToken", fcmToken).await()
+                android.util.Log.d("FCM_TOKEN", "Token saved to Firestore")
+            } catch (e: Exception) {
+                android.util.Log.e("FCM_TOKEN", "Failed to save token", e)
+            }
 
             val userDoc = firestore.collection("users").document(fbUser.uid).get().await()
             val user = if (userDoc.exists()) {

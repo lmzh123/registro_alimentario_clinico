@@ -1,5 +1,6 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { onCall } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -57,6 +58,11 @@ exports.notifyProfessionalsOnNewRegistro = onDocumentCreated(
     const patientDoc = await db.collection("users").doc(patientId).get();
     const patientName = patientDoc.data()?.displayName || patientDoc.data()?.email || "Tu paciente";
 
+    // Update lastRegistroAt on the patient's user document for inactivity tracking
+    await db.collection("users").doc(patientId).update({
+      lastRegistroAt: registro.fecha_hora,
+    });
+
     // Find all active connections for this patient
     const connectionsSnap = await db.collection("connections")
       .where("patientId", "==", patientId)
@@ -101,6 +107,51 @@ exports.notifyProfessionalsOnNewRegistro = onDocumentCreated(
     console.log(`Notified professionals for new registro by patient ${patientId}`);
   }
 );
+
+/**
+ * Runs every hour. Sends an FCM inactivity alert to pacientes who haven't
+ * logged a registro in 7+ hours and haven't already been notified for this gap.
+ */
+exports.checkInactivePatients = onSchedule("every 60 minutes", async () => {
+  const db = getFirestore();
+  const { getMessaging } = require("firebase-admin/messaging");
+
+  const sevenHoursAgo = new Date(Date.now() - 7 * 60 * 60 * 1000);
+
+  const patientsSnap = await db.collection("users")
+    .where("role", "==", "paciente")
+    .where("lastRegistroAt", "<=", sevenHoursAgo)
+    .get();
+
+  const tasks = [];
+  for (const doc of patientsSnap.docs) {
+    const data = doc.data();
+    const fcmToken = data.fcmToken;
+    if (!fcmToken) continue;
+
+    // Skip if we already sent a notification for this specific gap
+    const lastNotifSent = data.lastInactivityNotificationSentAt?.toDate?.() ?? null;
+    const lastRegistro = data.lastRegistroAt?.toDate?.() ?? null;
+    if (lastNotifSent && lastRegistro && lastNotifSent >= lastRegistro) continue;
+
+    tasks.push(
+      getMessaging().send({
+        token: fcmToken,
+        notification: {
+          title: "¿Ya registraste tu última comida?",
+          body: "He detectado que llevas más de 7 horas sin hacer el registro, ¿lo has olvidado? Recuerda que los tiempos largos de ayuno, el hambre >7 y las emociones intensas pueden incrementar el riesgo de atracones. Sería mejor que comas algo ahora.",
+        },
+        data: { type: "inactivity_alert" },
+        android: { notification: { channelId: "meal_reminders" } },
+      })
+      .then(() => doc.ref.update({ lastInactivityNotificationSentAt: new Date() }))
+      .catch((err) => console.error(`Inactivity FCM error for ${doc.id}:`, err))
+    );
+  }
+
+  await Promise.all(tasks);
+  console.log(`Inactivity check done. Processed ${tasks.length} patients.`);
+});
 
 /**
  * Triggered when a new comment is added to a registro.

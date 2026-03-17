@@ -1,9 +1,12 @@
 package com.registro.alimentario.navigation
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -14,11 +17,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.ui.auth.LoginScreen
 import com.registro.alimentario.ui.auth.RegisterScreen
 import com.registro.alimentario.viewmodel.AuthViewModel
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
@@ -29,6 +36,16 @@ fun AppNavHost(
     val currentRole by authViewModel.currentRole.collectAsState()
     val passwordResetState by authViewModel.passwordResetState.collectAsState()
     val resendVerificationState by authViewModel.resendVerificationState.collectAsState()
+
+    // Request POST_NOTIFICATIONS permission once the user is authenticated (Android 13+)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val notifPermission = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+        LaunchedEffect(currentRole) {
+            if (currentRole != null && !notifPermission.status.isGranted) {
+                notifPermission.launchPermissionRequest()
+            }
+        }
+    }
 
     if (isCheckingAuth) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

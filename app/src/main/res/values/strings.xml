@@ -153,6 +153,8 @@
     <string name="notif_new_registro_body">Tu paciente %1$s registró una nueva entrada.</string>
     <string name="notif_new_comment_professional_title">Nuevo comentario en un registro</string>
     <string name="notif_new_comment_professional_body">Un colega dejó un comentario en el registro de tu paciente.</string>
+    <string name="notif_inactivity_title">¿Ya registraste tu última comida?</string>
+    <string name="notif_inactivity_body">He detectado que llevas más de 7 horas sin hacer el registro, ¿lo has olvidado? Recuerda que los tiempos largos de ayuno, el hambre >7 y las emociones intensas pueden incrementar el riesgo de atracones. Sería mejor que comas algo ahora.</string>
 
     <!-- Permissions -->
     <string name="permission_camera_rationale">Para tomar fotos de tus comidas necesitamos acceso a la cámara.</string>
