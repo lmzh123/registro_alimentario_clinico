@@ -20,7 +20,10 @@ class RegistroMessagingService : FirebaseMessagingService() {
         FirebaseFirestore.getInstance()
             .collection("users")
             .document(uid)
-            .update("fcmToken", token)
+            .update(mapOf(
+                "fcmToken" to token,
+                "timeZone" to java.util.TimeZone.getDefault().id,
+            ))
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

@@ -118,21 +118,41 @@ exports.checkInactivePatients = onSchedule("every 60 minutes", async () => {
 
   const sevenHoursAgo = new Date(Date.now() - 7 * 60 * 60 * 1000);
 
-  const patientsSnap = await db.collection("users")
-    .where("role", "==", "paciente")
-    .where("lastRegistroAt", "<=", sevenHoursAgo)
-    .get();
+  const [inactiveSnap, neverLoggedSnap] = await Promise.all([
+    db.collection("users")
+      .where("role", "==", "paciente")
+      .where("lastRegistroAt", "<=", sevenHoursAgo)
+      .get(),
+    db.collection("users")
+      .where("role", "==", "paciente")
+      .where("lastRegistroAt", "==", null)
+      .get(),
+  ]);
+
+  // Merge both sets, deduplicated by doc ID
+  const docsById = new Map();
+  for (const doc of [...inactiveSnap.docs, ...neverLoggedSnap.docs]) {
+    docsById.set(doc.id, doc);
+  }
 
   const tasks = [];
-  for (const doc of patientsSnap.docs) {
+  for (const doc of docsById.values()) {
     const data = doc.data();
     const fcmToken = data.fcmToken;
     if (!fcmToken) continue;
 
-    // Skip if we already sent a notification for this specific gap
+    // Skip during sleeping hours (10 PM – 8 AM) in the patient's time zone
+    const timeZone = data.timeZone ?? "America/Bogota";
+    const localHour = parseInt(
+      new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hour12: false }).format(new Date()),
+      10
+    );
+    if (localHour >= 22 || localHour < 8) continue;
+
+    // Skip if we already sent a notification within the last hour
     const lastNotifSent = data.lastInactivityNotificationSentAt?.toDate?.() ?? null;
-    const lastRegistro = data.lastRegistroAt?.toDate?.() ?? null;
-    if (lastNotifSent && lastRegistro && lastNotifSent >= lastRegistro) continue;
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (lastNotifSent && lastNotifSent > oneHourAgo) continue;
 
     tasks.push(
       getMessaging().send({
