@@ -99,6 +99,9 @@ dependencies {
     // Accompanist (permissions)
     implementation(libs.accompanist.permissions)
 
+    // Vico charts
+    implementation(libs.vico.compose.m3)
+
     // Unit Tests
     testImplementation(libs.junit)
     testImplementation(libs.mockk)

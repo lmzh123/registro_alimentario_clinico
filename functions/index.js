@@ -175,11 +175,11 @@ exports.checkInactivePatients = onSchedule("every 60 minutes", async () => {
 
 /**
  * Triggered when a new comment is added to a registro.
- * - Sends FCM push to the owning patient.
  * - Updates lastCommentAt on the registro.
  * - Sends FCM push to all connected professionals except the commenter.
+ * Note: patients are NOT notified — clinical comments are for professionals only.
  */
-exports.notifyPatientOnComment = onDocumentCreated(
+exports.notifyProfessionalsOnComment = onDocumentCreated(
   "registros/{registroId}/comentarios/{comentarioId}",
   async (event) => {
     const registroId = event.params.registroId;
@@ -198,26 +198,6 @@ exports.notifyPatientOnComment = onDocumentCreated(
 
     // Update lastCommentAt on the registro
     await db.collection("registros").doc(registroId).update({ lastCommentAt: new Date() });
-
-    // Notify the patient
-    const patientDoc = await db.collection("users").doc(patientUid).get();
-    const patientFcmToken = patientDoc.data()?.fcmToken;
-    if (patientFcmToken) {
-      try {
-        await getMessaging().send({
-          token: patientFcmToken,
-          notification: {
-            title: "Nuevo comentario de tu equipo",
-            body: `Tu equipo de ${comment.rol} dejó un comentario en uno de tus registros.`,
-          },
-          data: { registroId, type: "clinical_comment" },
-          android: { notification: { channelId: "clinical_comments" } },
-        });
-        console.log(`Sent comment notification to patient ${patientUid}`);
-      } catch (err) {
-        console.error("Failed to send patient notification:", err);
-      }
-    }
 
     // Notify other professionals (active connections, excluding the commenter)
     const connectionsSnap = await db.collection("connections")

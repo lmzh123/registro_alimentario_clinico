@@ -84,6 +84,8 @@ fun NavGraphBuilder.professionalGraph(
         val currentRole by authViewModel.currentRole.collectAsState()
         val registros by professionalViewModel.filteredRegistros.collectAsState()
         val registroBadges by professionalViewModel.registroBadges.collectAsState()
+        val periodStats by professionalViewModel.periodStats.collectAsState()
+        val statsGranularity by professionalViewModel.statsGranularity.collectAsState()
 
         androidx.compose.runtime.LaunchedEffect(patientId, currentRole) {
             currentRole?.let { professionalViewModel.loadRegistrosForPatient(patientId, it.id) }
@@ -94,7 +96,10 @@ fun NavGraphBuilder.professionalGraph(
             registros = registros,
             currentFilter = com.registro.alimentario.viewmodel.RegistroFilter(),
             registroBadges = registroBadges,
+            periodStats = periodStats,
+            statsGranularity = statsGranularity,
             onFilterChanged = { professionalViewModel.setFilter(it) },
+            onGranularityChange = { professionalViewModel.setStatsGranularity(it) },
             onRegistroTapped = { id ->
                 professionalViewModel.markRegistroAsSeen(id)
                 navController.navigate(NavRoutes.registroDetailProfessional(id))

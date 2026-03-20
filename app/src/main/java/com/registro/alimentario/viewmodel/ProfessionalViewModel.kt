@@ -5,7 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.registro.alimentario.model.ComentarioClinico
+import com.registro.alimentario.model.FueAtracon
 import com.registro.alimentario.model.Registro
+import com.registro.alimentario.model.RestriccionPrevia
 import com.registro.alimentario.model.User
 import com.registro.alimentario.model.UserRole
 import com.registro.alimentario.repository.ComentarioRepository
@@ -14,12 +16,29 @@ import com.registro.alimentario.repository.ProfessionalRepository
 import com.registro.alimentario.repository.ConnectionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
+
+enum class StatsGranularity { WEEKLY, MONTHLY }
+
+data class PeriodStats(
+    val periodLabel: String,
+    val totalRegistros: Int,
+    val deseosPurgar: Int,
+    val actuoSobrePurga: Int,
+    val atracones: Int,
+    val restriccionSalteComida: Int,
+    val restriccionComiMenos: Int,
+    val restriccionRetrase: Int,
+    val restriccionNoHubo: Int
+)
 
 data class RegistroFilter(
     val fueAtracon: Boolean = false,
@@ -67,6 +86,15 @@ class ProfessionalViewModel @Inject constructor(
 
     private val _registroBadges = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val registroBadges: StateFlow<Map<String, Boolean>> = _registroBadges.asStateFlow()
+
+    private val _statsGranularity = MutableStateFlow(StatsGranularity.WEEKLY)
+    val statsGranularity: StateFlow<StatsGranularity> = _statsGranularity.asStateFlow()
+
+    val periodStats: StateFlow<List<PeriodStats>> = combine(_allRegistros, _statsGranularity) { registros, granularity ->
+        computePeriodStats(registros, granularity)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun setStatsGranularity(g: StatsGranularity) { _statsGranularity.value = g }
 
     fun loadPatientBadges(therapistId: String) {
         viewModelScope.launch {
@@ -205,6 +233,46 @@ class ProfessionalViewModel @Inject constructor(
     fun deleteComment(registroId: String, commentId: String) {
         viewModelScope.launch {
             comentarioRepository.deleteComment(registroId, commentId)
+        }
+    }
+
+    private fun computePeriodStats(registros: List<Registro>, granularity: StatsGranularity): List<PeriodStats> {
+        if (registros.isEmpty()) return emptyList()
+        val calendar = Calendar.getInstance()
+        val grouped = registros.groupBy { r ->
+            calendar.time = r.fechaHora.toDate()
+            if (granularity == StatsGranularity.WEEKLY)
+                "${calendar.get(Calendar.YEAR)}-W${calendar.get(Calendar.WEEK_OF_YEAR).toString().padStart(2, '0')}"
+            else
+                "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH).toString().padStart(2, '0')}"
+        }
+        return grouped.entries
+            .sortedBy { it.key }
+            .map { (key, group) ->
+                PeriodStats(
+                    periodLabel = formatPeriodLabel(key, granularity),
+                    totalRegistros = group.size,
+                    deseosPurgar = group.count { it.deseosPurgar },
+                    actuoSobrePurga = group.count { it.actuoSobrePurga },
+                    atracones = group.count { it.fueAtracon == FueAtracon.SI },
+                    restriccionSalteComida = group.count { it.restriccionPrevia == RestriccionPrevia.SALTE_COMIDA },
+                    restriccionComiMenos = group.count { it.restriccionPrevia == RestriccionPrevia.COMI_MENOS },
+                    restriccionRetrase = group.count { it.restriccionPrevia == RestriccionPrevia.RETRASE_COMIDA },
+                    restriccionNoHubo = group.count { it.restriccionPrevia == RestriccionPrevia.NO_HUBO }
+                )
+            }
+    }
+
+    private fun formatPeriodLabel(key: String, granularity: StatsGranularity): String {
+        return if (granularity == StatsGranularity.WEEKLY) {
+            val week = key.substringAfter("-W").trimStart('0').ifEmpty { "0" }
+            "Sem $week"
+        } else {
+            val parts = key.split("-")
+            val year = parts.getOrNull(0) ?: ""
+            val monthIndex = parts.getOrNull(1)?.toIntOrNull() ?: 0
+            val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+            "${monthNames.getOrElse(monthIndex) { monthIndex.toString() }} $year"
         }
     }
 }
