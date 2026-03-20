@@ -26,7 +26,7 @@ import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 
-enum class StatsGranularity { WEEKLY, MONTHLY }
+enum class StatsGranularity { LAST_7_DAYS, LAST_30_DAYS, WEEKLY, MONTHLY }
 
 data class PeriodStats(
     val periodLabel: String,
@@ -239,40 +239,99 @@ class ProfessionalViewModel @Inject constructor(
     private fun computePeriodStats(registros: List<Registro>, granularity: StatsGranularity): List<PeriodStats> {
         if (registros.isEmpty()) return emptyList()
         val calendar = Calendar.getInstance()
-        val grouped = registros.groupBy { r ->
-            calendar.time = r.fechaHora.toDate()
-            if (granularity == StatsGranularity.WEEKLY)
-                "${calendar.get(Calendar.YEAR)}-W${calendar.get(Calendar.WEEK_OF_YEAR).toString().padStart(2, '0')}"
-            else
-                "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH).toString().padStart(2, '0')}"
+
+        val daysBack = when (granularity) {
+            StatsGranularity.LAST_7_DAYS -> 6
+            StatsGranularity.LAST_30_DAYS -> 29
+            else -> null
         }
-        return grouped.entries
-            .sortedBy { it.key }
-            .map { (key, group) ->
-                PeriodStats(
-                    periodLabel = formatPeriodLabel(key, granularity),
-                    totalRegistros = group.size,
-                    deseosPurgar = group.count { it.deseosPurgar },
-                    actuoSobrePurga = group.count { it.actuoSobrePurga },
-                    atracones = group.count { it.fueAtracon == FueAtracon.SI },
-                    restriccionSalteComida = group.count { it.restriccionPrevia == RestriccionPrevia.SALTE_COMIDA },
-                    restriccionComiMenos = group.count { it.restriccionPrevia == RestriccionPrevia.COMI_MENOS },
-                    restriccionRetrase = group.count { it.restriccionPrevia == RestriccionPrevia.RETRASE_COMIDA },
-                    restriccionNoHubo = group.count { it.restriccionPrevia == RestriccionPrevia.NO_HUBO }
-                )
+        val source = if (daysBack != null) {
+            val cutoff = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                add(Calendar.DAY_OF_YEAR, -daysBack)
+            }.time
+            registros.filter { it.fechaHora.toDate() >= cutoff }
+        } else registros
+
+        val grouped = source.groupBy { r ->
+            calendar.time = r.fechaHora.toDate()
+            when (granularity) {
+                StatsGranularity.LAST_7_DAYS, StatsGranularity.LAST_30_DAYS ->
+                    "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.DAY_OF_YEAR).toString().padStart(3, '0')}"
+                StatsGranularity.WEEKLY ->
+                    "${calendar.get(Calendar.YEAR)}-W${calendar.get(Calendar.WEEK_OF_YEAR).toString().padStart(2, '0')}"
+                StatsGranularity.MONTHLY ->
+                    "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH).toString().padStart(2, '0')}"
             }
+        }
+
+        // For day-based views fill in missing days so every day always appears
+        val entries = if (daysBack != null) {
+            val totalDays = daysBack + 1
+            val dayKeys = (0 until totalDays).map { offset ->
+                Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    add(Calendar.DAY_OF_YEAR, -daysBack + offset)
+                }.let { c ->
+                    "${c.get(Calendar.YEAR)}-${c.get(Calendar.DAY_OF_YEAR).toString().padStart(3, '0')}"
+                }
+            }
+            dayKeys.map { key -> key to (grouped[key] ?: emptyList()) }
+        } else {
+            grouped.entries.sortedBy { it.key }.map { it.key to it.value }
+        }
+
+        return entries.map { (key, group) ->
+            PeriodStats(
+                periodLabel = formatPeriodLabel(key, granularity),
+                totalRegistros = group.size,
+                deseosPurgar = group.count { it.deseosPurgar },
+                actuoSobrePurga = group.count { it.actuoSobrePurga },
+                atracones = group.count { it.fueAtracon == FueAtracon.SI },
+                restriccionSalteComida = group.count { it.restriccionPrevia == RestriccionPrevia.SALTE_COMIDA },
+                restriccionComiMenos = group.count { it.restriccionPrevia == RestriccionPrevia.COMI_MENOS },
+                restriccionRetrase = group.count { it.restriccionPrevia == RestriccionPrevia.RETRASE_COMIDA },
+                restriccionNoHubo = group.count { it.restriccionPrevia == RestriccionPrevia.NO_HUBO }
+            )
+        }
     }
 
     private fun formatPeriodLabel(key: String, granularity: StatsGranularity): String {
-        return if (granularity == StatsGranularity.WEEKLY) {
-            val week = key.substringAfter("-W").trimStart('0').ifEmpty { "0" }
-            "Sem $week"
-        } else {
-            val parts = key.split("-")
-            val year = parts.getOrNull(0) ?: ""
-            val monthIndex = parts.getOrNull(1)?.toIntOrNull() ?: 0
-            val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-            "${monthNames.getOrElse(monthIndex) { monthIndex.toString() }} $year"
+        return when (granularity) {
+            StatsGranularity.LAST_7_DAYS -> {
+                val parts = key.split("-")
+                val year = parts.getOrNull(0)?.toIntOrNull() ?: return key
+                val dayOfYear = parts.getOrNull(1)?.toIntOrNull() ?: return key
+                val cal = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.DAY_OF_YEAR, dayOfYear)
+                }
+                val dayNames = listOf("Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb")
+                val dayName = dayNames.getOrElse(cal.get(Calendar.DAY_OF_WEEK) - 1) { "" }
+                "$dayName ${cal.get(Calendar.DAY_OF_MONTH)}"
+            }
+            StatsGranularity.LAST_30_DAYS -> {
+                val parts = key.split("-")
+                val year = parts.getOrNull(0)?.toIntOrNull() ?: return key
+                val dayOfYear = parts.getOrNull(1)?.toIntOrNull() ?: return key
+                val cal = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, year)
+                    set(Calendar.DAY_OF_YEAR, dayOfYear)
+                }
+                "${cal.get(Calendar.DAY_OF_MONTH)}"
+            }
+            StatsGranularity.WEEKLY -> {
+                val week = key.substringAfter("-W").trimStart('0').ifEmpty { "0" }
+                "Sem $week"
+            }
+            StatsGranularity.MONTHLY -> {
+                val parts = key.split("-")
+                val monthIndex = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+                monthNames.getOrElse(monthIndex) { monthIndex.toString() }
+            }
         }
     }
 }
