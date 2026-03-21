@@ -69,7 +69,7 @@ class RegistroMessagingService : FirebaseMessagingService() {
         )
 
         val notification = NotificationCompat.Builder(this, "clinical_comments")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.notification_comment_title))
             .setContentText(getString(R.string.notification_comment_body, "tu equipo"))
             .setAutoCancel(true)
@@ -82,7 +82,7 @@ class RegistroMessagingService : FirebaseMessagingService() {
 
     private fun showNewRegistroNotification(patientName: String) {
         val notification = NotificationCompat.Builder(this, "professional_notifications")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.notif_new_registro_title))
             .setContentText(getString(R.string.notif_new_registro_body, patientName))
             .setAutoCancel(true)
@@ -96,7 +96,7 @@ class RegistroMessagingService : FirebaseMessagingService() {
     private fun showInactivityNotification() {
         val body = getString(R.string.notif_inactivity_body)
         val notification = NotificationCompat.Builder(this, "meal_reminders")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.notif_inactivity_title))
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -109,7 +109,7 @@ class RegistroMessagingService : FirebaseMessagingService() {
 
     private fun showNewCommentForProfessionalNotification(registroId: String?) {
         val notification = NotificationCompat.Builder(this, "professional_notifications")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(getString(R.string.notif_new_comment_professional_title))
             .setContentText(getString(R.string.notif_new_comment_professional_body))
             .setAutoCancel(true)
